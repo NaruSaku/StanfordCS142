@@ -1,0 +1,22 @@
+.cs142-detail-properties{
+    padding: 20px;
+    font-size: 30px;
+}
+.cs142-detail-name{
+    margin-bottom: 0;
+    font-size: 35px;
+    padding-bottom: 10px;
+}
+
+.cs142-detail-userLocation{
+    padding-bottom: 10px;
+    color: gray;
+    font-style: italic;
+}
+.cs142-detail-photos{
+
+}
+.cs142-detail-property{
+    font-weight: bold;
+    padding-right: 5px;
+}

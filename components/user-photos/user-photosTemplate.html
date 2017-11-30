@@ -1,0 +1,58 @@
+<div class="cs142-photos-list">
+    <div ng-show="userPhotos.noPhotos" class="cs142-photos-noPhotos">Let's upload the photos!</div>
+    <div ng-repeat="photo in userPhotos.photos" class="cs142-photos-photo">
+        <div class="cs142-photos-photoDate">
+            <div>{{photo.date_time}}</div>
+            <button ng-if="userPhotos.hasPhotoAuthority(photo)" ng-click="userPhotos.delete(photo)">Delete</button>
+        </div>
+
+        <img ng-src="/images/{{photo.file_name}}" class="cs142-photos-image">
+        <div ng-show="userPhotos.checked" class="cs142-photos-buttons">
+            <button ng-click="userPhotos.previous()">Previous</button>
+            <button ng-click="userPhotos.next()">Next</button>
+        </div>
+        <div class="cs142-photos-photoLike">
+            <div class="cs142-photos-like">
+                <img  ng-src="/images/like2.jpg" ng-click = "userPhotos.like(photo)">
+                {{photo.like_num}}
+            </div>
+            <div class="cs142-photos-like">
+                <img ng-src="/images/dislike2.png" ng-click = "userPhotos.dislike(photo)">
+                {{photo.dislike_num}}
+            </div>
+
+        </div>
+
+        <div class="cs142-photos-comments">
+            <div class="cs142-photos-commentHead">
+                <div class="cs142-photos-comment2">Comments</div>
+                <!--<div class="cs142-photos-viewTimes">View Times:{{photo.view_times}}</div>-->  <!--I will be back!-->
+            </div>
+
+            <div ng-repeat="comment in photo.comments" class="cs142-photos-comment">
+                <div class="cs142-photos-commentTitle">
+                    <div class="cs142-photos-commentor">
+                        <a ng-href="#!users/{{comment.user._id}}">
+                            {{comment.user.first_name }} {{comment.user.last_name}}
+                        </a>
+                    </div>
+                    <div class="cs142-photos-commentTime">
+                        {{comment.date_time}}
+                    </div>
+                </div>
+                <div class="cs142-photos-content">{{comment.comment}}</div>
+                <button class="cs142-photos-deleteComment" ng-if="userPhotos.hasCommentAuthority(comment)" ng-click="userPhotos.deleteComment(photo, comment)">
+                    Delete Comment
+                </button>
+            </div>
+
+            <div class="cs142-photos-addComment">
+                <form ng-submit="userPhotos.addComment(photo)">
+                    <textarea ng-model="userPhotos.comments[photo._id]" placeholder="Add comment" class="cs142-photos-text"></textarea>
+                    <input type = "submit" value = "Submit" />
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>

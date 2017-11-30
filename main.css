@@ -1,0 +1,58 @@
+/*
+CSS for the CS142 project #5 main page
+
+Since CSS uses a global name space for classes we should use class names starting with
+cs142-main- here.
+*/
+
+.cs142-main-toolbar {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px;
+    width: 100%;
+}
+
+.md-button {
+    min-width: 1%;
+    min-height: 1%;
+}
+
+.cs142-main-author{
+    font-size: 24px;
+    font-family: "Times New Roman";
+}
+
+.cs142-main-version {
+    font-size: 18px;
+}
+
+
+.cs-142-main-leftSide {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    min-height: 1%;
+}
+
+.cs-142-main-rightSide{
+    font-size: 20px;
+    display: flex;
+    font-weight: 700;
+}
+
+.cs142-main-barElement{
+    font-size: 18px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+.cs142-main-sidenav{
+    background:url("/images/demo-1-bg.jpg");
+}
+
+md-content{
+    background:url("/images/background.jpeg") repeat;
+}
