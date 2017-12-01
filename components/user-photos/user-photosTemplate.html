@@ -3,7 +3,10 @@
     <div ng-repeat="photo in userPhotos.photos" class="cs142-photos-photo">
         <div class="cs142-photos-photoDate">
             <div>{{photo.date_time}}</div>
-            <button ng-if="userPhotos.hasPhotoAuthority(photo)" ng-click="userPhotos.delete(photo)">Delete</button>
+            <!--<button ng-if="userPhotos.hasPhotoAuthority(photo)" ng-click="userPhotos.delete(photo)">Delete</button>-->
+            <md-button class="md-primary md-raised" ng-if="userPhotos.hasPhotoAuthority(photo)" ng-click="userPhotos.delete($event,photo)">
+                Delete
+            </md-button>
         </div>
 
         <img ng-src="/images/{{photo.file_name}}" class="cs142-photos-image">
@@ -13,7 +16,7 @@
         </div>
         <div class="cs142-photos-photoLike">
             <div class="cs142-photos-like">
-                <img  ng-src="/images/like2.jpg" ng-click = "userPhotos.like(photo)">
+                <img  ng-src="/images/like3.jpg" ng-click = "userPhotos.like(photo)">
                 {{photo.like_num}}
             </div>
             <div class="cs142-photos-like">
@@ -26,7 +29,7 @@
         <div class="cs142-photos-comments">
             <div class="cs142-photos-commentHead">
                 <div class="cs142-photos-comment2">Comments</div>
-                <!--<div class="cs142-photos-viewTimes">View Times:{{photo.view_times}}</div>-->  <!--I will be back!-->
+                <div class="cs142-photos-viewTimes">View Times:{{photo.view_times}}</div>  
             </div>
 
             <div ng-repeat="comment in photo.comments" class="cs142-photos-comment">
@@ -41,16 +44,20 @@
                     </div>
                 </div>
                 <div class="cs142-photos-content">{{comment.comment}}</div>
-                <button class="cs142-photos-deleteComment" ng-if="userPhotos.hasCommentAuthority(comment)" ng-click="userPhotos.deleteComment(photo, comment)">
+                <md-button class="md-primary md-raised" ng-if="userPhotos.hasCommentAuthority(comment)" ng-click="userPhotos.deleteComment($event,photo,comment)">
                     Delete Comment
-                </button>
+                </md-button>
             </div>
 
             <div class="cs142-photos-addComment">
-                <form ng-submit="userPhotos.addComment(photo)">
-                    <textarea ng-model="userPhotos.comments[photo._id]" placeholder="Add comment" class="cs142-photos-text"></textarea>
-                    <input type = "submit" value = "Submit" />
-                </form>
+                <!--<form ng-submit="userPhotos.addComment(photo)">-->
+                    <!--<textarea ng-model="userPhotos.newComment" placeholder="Add comment" class="cs142-photos-text"></textarea>-->
+                    <!--<input type = "submit" value = "Submit" />-->
+                <!--</form>-->
+                <textarea ng-model="userPhotos.newComment" placeholder="Add comment" class="cs142-photos-text"></textarea>
+                <button class="cs142-photos-deleteComment" ng-click="userPhotos.addComment(photo)">
+                    Submit
+                </button>
             </div>
 
         </div>

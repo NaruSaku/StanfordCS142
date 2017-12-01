@@ -4,7 +4,7 @@
         <span class="cs142-detail-userLocation">{{userDetail.user.location}}</span>
     </div>
     <a ng-href="{{'#!/photos/' + userDetail.user._id}}">
-        <span class="cs142-detail-photos">See the photos!</span>
+        <span class="cs142-detail-photosLink">See the photos!</span>
     </a>
     <br>
 
@@ -15,5 +15,22 @@
 
     <span class="cs142-detail-property"> Description: </span>
     <span class="cs142-detail-content">{{userDetail.user.description}}</span>
+
+    <br>
+
+    <div class="cs142-detail-photos">
+        <div class="cs142-detail-thumbnail">
+            <div class="cs142-detail-thumbnailWord">The most recently uploaded photo</div>
+            <img ng-src="/images/{{userDetail.mostRecentlyPhoto.file_name}}" class="cs142-detail-thumbnailPhoto"
+                 ng-click="userDetail.showDetail(userDetail.mostRecentlyPhoto)">
+            <div class="cs142-detail-thumbnailDate">{{userDetail.mostRecentlyPhoto.date_time}}</div>
+        </div>
+        <div class="cs142-detail-thumbnail">
+            <div class="cs142-detail-thumbnailWord">The photo with the most comments</div>
+            <img ng-src="/images/{{userDetail.mostCommentsPhoto.file_name}}" class="cs142-detail-thumbnailPhoto">
+            <div class="cs142-detail-thumbnailDate">Comments Number: {{userDetail.mostCommentsPhoto.comments.length}}</div>
+        </div>
+    </div>
+
 
 </div>

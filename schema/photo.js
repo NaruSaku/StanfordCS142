@@ -7,15 +7,19 @@
 /* jshint node: true */
 
 var mongoose = require('mongoose');
+//var commentSchema = require('./comment.js');
 
 /*
  * Photo can have comments and we stored them in the Photo object itself using
  * this Schema:
  */
 var commentSchema = new mongoose.Schema({
-    comment: String,     // The text of the comment.
+    comment: {type:String,text:true},     // The text of the comment.
     date_time: {type: String, default: new Date().toLocaleString()}, // The date and time when the comment was created.
     user_id: mongoose.Schema.Types.ObjectId,    // 	The ID of the user who created the comment.
+    owner_id:mongoose.Schema.Types.ObjectId,
+    user: String,
+    photo_id:mongoose.Schema.Types.ObjectId
 });
 
 // create a schema for Photo
@@ -24,7 +28,7 @@ var photoSchema = new mongoose.Schema({
     view_times:{type: Number, default:1},   // This part is added by myself
     date_time: {type: String, default: new Date().toLocaleString()}, // 	The date and time when the photo was added to the database
     user_id: mongoose.Schema.Types.ObjectId, // The ID of the user who created the photo.
-    comments: [commentSchema], // Array of comment objects representing the comments made on this photo.
+    comments: {type:[commentSchema],default:[]}, // Array of comment objects representing the comments made on this photo.
     like_num: {type: Number, default: 0},
     dislike_num: {type: Number, default: 0},
     like_user_ids: {type:[mongoose.Schema.Types.ObjectId], default: []},

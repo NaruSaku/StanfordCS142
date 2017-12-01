@@ -229,7 +229,7 @@
       userModel: userModel,
       photoOfUserModel: photoOfUserModel,
       schemaInfo: schemaModel,
-       commentModel:commentModel
+      commentModel:commentModel
    };
 
 

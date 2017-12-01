@@ -1,7 +1,7 @@
 'use strict';
 
-cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource','$http', '$rootScope','$location',
-    function($scope, $routeParams,$resource, $http, $rootScope,$location) {
+cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource','$http', '$rootScope','$location','$mdDialog',
+    function($scope, $routeParams,$resource, $http, $rootScope,$location,$mdDialog) {
         /*
          * Since the route is specified as '/photos/:userId' in $routeProvider config the
          * $routeParams  should have the userId property set with the path from the URL.
@@ -43,27 +43,34 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                     }, function errorCallback(response) {
                         console.log(response.data);
                     });
-                    //alert(photo.view_times);
                 });
             });
-
-
         };
+
+        /* This part is used to show only one picture at a time */
+        // $rootScope.$on("ShowSinglePhoto",function (event,data) {
+        //     alert("shit2");
+        //     $scope.userPhotos.selectIndex(data);
+        // });
+
+        // $scope.userPhotos.selectIndex = function (photo) {
+        //     $scope.userPhotos.index = $scope.userPhotos.photos2.indexOf(photo);
+        //     console.log($scope.userPhotos.index);
+        //     $scope.userPhotos.checked = true;
+        //     $scope.userPhotos.reload();
+        // };
 
         $scope.userPhotos.reload();
 
-
-
-
         $scope.userPhotos.addComment = function(photo) {
-            var data = JSON.stringify({comment: $scope.userPhotos.comments[photo._id]});
+            var data = JSON.stringify({comment: $scope.userPhotos.newComment,owner_id:photo.user_id});
             $http.post("/commentsOfPhoto/" + photo._id, data).then(function successCallback(response) {
                 $rootScope.$broadcast("commentAdded");
                 console.log(response.data);
             }, function errorCallback(response) {
                 console.log(response.data);
             });
-            $scope.userPhotos.comments[photo._id] = "";
+            $scope.userPhotos.newComment = "";
         };
 
         $scope.userPhotos.hasPhotoAuthority = function (photo) {
@@ -78,27 +85,46 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
             }
         };
 
-        $scope.userPhotos.delete = function (photo) {
-            if(!confirm("This will delete the photo and cannot be revoked!")){
-                return;
-            }
-            $http.post('/deletePhoto', JSON.stringify({photo_id:photo._id})).then(function successCallback(response) {
-                $rootScope.$broadcast("photoDeleted");
-            }, function errorCallback(response) {
-                console.log(response.data);
+        $scope.userPhotos.deleteComment = function(ev,photo,comment) {
+            // Appending dialog to document.body to cover sidenav in docs app
+            var confirm = $mdDialog.confirm()
+                .title('This will delete the comment!')
+                .textContent('This delete cannot be revoked')
+                .targetEvent(ev)
+                .ok('Delete!')
+                .cancel('Keep it');
+
+            $mdDialog.show(confirm).then(function() {
+                $http.post('/deleteComment', JSON.stringify({photo_id:photo._id,comment_id:comment._id})).then(function successCallback(response) {
+                    $rootScope.$broadcast("commentDeleted");
+                }, function errorCallback(response) {
+                    console.log(response.data);
+                });
+            }, function() {
+                console.log("You don't want to delete the comment at present.")
             });
         };
 
-        $scope.userPhotos.deleteComment = function (photo,comment) {
-            if(!confirm("This will delete the comment!")){
-                return;
-            }
-            $http.post('/deleteComment', JSON.stringify({photo_id:photo._id,comment_id:comment._id})).then(function successCallback(response) {
-                $rootScope.$broadcast("commentDeleted");
-            }, function errorCallback(response) {
-                console.log(response.data);
+        $scope.userPhotos.delete = function (ev,photo) {
+            var confirm = $mdDialog.confirm()
+                .title('This will delete the photo!')
+                .textContent('This delete cannot be revoked')
+                .targetEvent(ev)
+                .ok('Delete!')
+                .cancel('Keep it');
+            $mdDialog.show(confirm).then(function() {
+                $http.post('/deletePhoto', JSON.stringify({photo_id:photo._id})).then(function successCallback(response) {
+                    $rootScope.$broadcast("photoDeleted");
+                }, function errorCallback(response) {
+                    console.log(response.data);
+                });
+            }, function() {
+                console.log("You don't want to delete the photo at present.")
             });
+
         };
+
+
 
         /* This part is for advanced feature */
         $scope.userPhotos.previous = function () {
@@ -134,6 +160,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                 console.log(response.data);
             });
         };
+
 
 
         $scope.$on("commentAdded", $scope.userPhotos.reload);
