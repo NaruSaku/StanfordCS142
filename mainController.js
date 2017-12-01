@@ -21,6 +21,10 @@ cs142App.config(['$routeProvider',
             templateUrl: 'components/login-register/login-registerTemplate.html',
             controller:'LoginRegisterController'
         }).
+        when('/comment/:text',{
+            templateUrl: 'components/comment/commentTemplate.html',
+            controller:'commentController'
+        }).
         otherwise({
             redirectTo: '/users'
         });
@@ -63,6 +67,23 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
             $mdSidenav("users").toggle();
         };
 
+        /* Reference:http://blog.csdn.net/YYecust/article/details/52419522 */
+        $scope.main.showAdvanced = function() {
+            $mdDialog.show({
+                controller: 'DialogController',
+                scope: $scope.$new(),
+                templateUrl: 'components/dialog/dialogTemplate.html',
+                parent: angular.element(document.body)
+            }).then(function(trusted_users) {
+                    var restricted = true;
+                    $scope.main.uploadPhoto(restricted, trusted_users);
+                }, function() {
+                    var restricted = false;
+                    var trusted_users = [];
+                    $scope.main.uploadPhoto(restricted, trusted_users);
+                });
+        };
+
 
 
 
@@ -70,6 +91,7 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         $scope.main.inputFileNameChanged = function (element) {
             $scope.main.selectedPhotoFile = element.files[0];
             $scope.main.uploadPhoto();
+            //$scope.main.showAdvanced();
         };
 
         $scope.main.inputFileNameSelected = function () {
@@ -117,5 +139,16 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                 console.log(response.data);
             });
         };
+
+        // $rootScope.$on("emitSinglePhoto",function (event, args) {
+        //     //alert("shit");
+        //     $rootScope.$broadcast("ShowSinglePhoto",args);
+        // });
+        //
+        $scope.main.submit = function () {
+            $location.path("/comment/" + $scope.main.comment);
+            $scope.main.comment = "";
+        }
+
 
     }]);

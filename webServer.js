@@ -39,7 +39,7 @@ var async = require('async');
 var User = require('./schema/user.js');
 var Photo = require('./schema/photo.js');
 var SchemaInfo = require('./schema/schemaInfo.js');
-var Comment = ('./schema/comment.js');
+var Comment = require('./schema/comment.js');
 
 var express = require('express');
 var app = express();
@@ -50,8 +50,8 @@ var bodyParser = require('body-parser');
 var fs = require("fs");
 var multer = require('multer');
 var cs142password = require('./cs142password.js');
-var nodemailer = require('nodemailer');
-var smtpTransport = require('nodemailer-smtp-transport');
+// var nodemailer = require('nodemailer');
+// var smtpTransport = require('nodemailer-smtp-transport');
 
 
 mongoose.connect('mongodb://localhost/cs142project6');
@@ -158,8 +158,6 @@ app.get('/user/list', function (request, response) {
                 if (err){
                     console.log("User" + user + "has no photos.");
                 }
-                // This part is built by myself to record how many times a photo has been viewed
-                // I have to comment it temporarily for submitting the homework
 
                 user.photoLength = photos.length;
                 photoNum.push(photos.length);
@@ -189,7 +187,6 @@ app.get('/user/:id', function (request, response) {
         return;
     }
     var id = request.params.id;
-    var send_body = {};
     User.findOne({'_id':id},function (err,userDetail) {
         if (err){
             response.status(400).send(JSON.stringify(err));
@@ -200,39 +197,172 @@ app.get('/user/:id', function (request, response) {
             return;
         }
         //request.session.user_id = userDetail._id;
-        send_body.userDetail = userDetail;
+        response.status(200).send(userDetail);
+    })
+});
 
-    }).then(function () {
-        Photo.find({'user_id': id}, function(err, photoList) {
+app.get('/userPhoto/:id', function (request, response) {
+    if (!request.session.user_id) {
+        response.status(401).send('unauthorized');
+        return;
+    }
+    var id = request.params.id;
+    var send_body = {};
+    Photo.find({'user_id': id}, function(err, photoList) {
+        if (err) {
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        var mostRecentlyPhoto = {};
+        var mostCommentsPhoto = {};
+        var commentNum = 0;
+        if (photoList.length > 0){
+            mostRecentlyPhoto = photoList[photoList.length - 1];
+            send_body.mostRecentlyPhoto = mostRecentlyPhoto;
+            var photos = JSON.parse(JSON.stringify(photoList));
+            async.each(photos,function (photo,photo_callback) {
+                if (photo.comments.length > commentNum){
+                    commentNum = photo.comments.length;
+                    mostCommentsPhoto = photo;
+                    send_body.mostCommentsPhoto = mostCommentsPhoto;
+                }
+                photo_callback();
+            },function (err) {
+                if (err){
+                    response.status(400).send(JSON.stringify(err));
+                }
+                response.status(200).send(send_body);
+            });
+        }
+    });
+});
+
+app.get('/comment/:text', function (request, response) {
+    if (!request.session.user_id) {
+        response.status(401).send('unauthorized');
+        return;
+    }
+    var text = request.params.text;
+    console.log("User input: " + text);
+    var send_comments=[];
+    var send_photos=[];
+
+
+    /*This part is a test for promise*/
+    // function runAsync1(){
+    //     var p = new Promise(function(resolve, reject){
+    //         Comment.find({$text:{$search: text}},function(err,comments){
+    //             if (err) {
+    //                 response.status(400).send(JSON.stringify(err));
+    //                 return;
+    //             }
+    //             send_comments = comments;
+    //             console.log(comments.length + "!");
+    //             resolve("shit1");
+    //         });
+    //
+    //     });
+    //     return p;
+    // }
+    // function runAsync2(){
+    //     var p = new Promise(function(resolve, reject){
+    //         async.each(send_comments,function (send_comment,comment_callback) {
+    //             Photo.findOne({photo_id:send_comment.photo_id},function (err,photo) {
+    //                 if (err) {
+    //                     response.status(400).send(JSON.stringify(err));
+    //                     return;
+    //                 }
+    //                 send_photos.push(photo);
+    //                 comment_callback();
+    //                 resolve("shit2");
+    //             })
+    //         });
+    //
+    //     });
+    //     return p;
+    // }
+    // function runAsync3(){
+    //     var p = new Promise(function(resolve, reject){
+    //         console.log(send_comments.length + "?");
+    //         resolve("shit3");
+    //         response.status(200).send({
+    //             comments:send_comments,
+    //             photos:send_photos
+    //         });
+    //     });
+    //     return p;
+    // }
+    //
+    // runAsync1().then(function(data){
+    //     console.log(data);
+    //     return runAsync2();
+    // }).then(function(data){
+    //     console.log(data);
+    //     return runAsync3();
+    // })
+    /*This part is a test for non-promise then*/
+    // Comment.find({$text:{$search: text}},function(err,comments){
+    //     if (err) {
+    //         response.status(400).send(JSON.stringify(err));
+    //         return;
+    //     }
+    //     send_comments = comments;
+    //     console.log(comments.length);
+    // }).then(function () {
+    //     async.each(send_comments,function (send_comment,comment_callback) {
+    //         Photo.findOne({photo_id:send_comment.photo_id},function (err,photo) {
+    //             if (err) {
+    //                 response.status(400).send(JSON.stringify(err));
+    //                 return;
+    //             }
+    //             send_photos.push(photo);
+    //             comment_callback();
+    //         })
+    //     })
+    // }).then(function () {
+    //     response.status(200).send({
+    //         comments:send_comments,
+    //         photos:send_photos
+    //     });
+    // })
+
+    Comment.find({$text:{$search: text}},function(err,comments){
+        if (err) {
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        send_comments = comments;
+        for (var index = 0; index < send_comments.length; index++){
+            console.log(send_comments[index].photo_id);
+            console.log(send_comments[index].comment);
+            console.log(send_comments[index].date_time);
+            console.log(send_comments[index].user_id);
+            console.log(send_comments[index]._id);
+        }
+        async.each(send_comments,function (send_comment,comment_callback) {
+            Photo.findOne({photo_id:send_comment.photo_id},function (err,photo) {
+                if (err) {
+                    response.status(400).send(JSON.stringify(err));
+                    return;
+                }
+                //console.log(photo.file_name);
+                send_photos.push(photo);
+                comment_callback();
+            })
+        },function (err) {
             if (err) {
                 response.status(400).send(JSON.stringify(err));
-                return;
             }
-            var mostRecentlyPhoto = {};
-            var mostCommentsPhoto = {};
-            var commentNum = 0;
-            if (photoList.length > 0){
-                mostRecentlyPhoto = photoList.slice(-1);
-                send_body.mostRecentlyPhoto = mostRecentlyPhoto;
-                var photos = JSON.parse(JSON.stringify(photoList));
-                async.each(photos,function (photo,photo_callback) {
-                    if (photo.comments.length > commentNum){
-                        commentNum = photo.comments.length;
-                        mostCommentsPhoto = photo;
-                        send_body.mostCommentsPhoto = mostCommentsPhoto;
-                    }
-                    photo_callback();
-                },function (err) {
-                    if (err){
-                        response.status(400).send(JSON.stringify(err));
-                    }
-                });
+            for (var index = 0; index < send_comments.length; index++){
+                console.log(send_comments[index].photo_id);
+                console.log(send_comments[index].comment);
             }
-        });
-    }).then(function () {
-        console.log(send_body);
-        response.status(200).send(send_body);
-    });
+            response.status(200).send({
+                comments:send_comments,
+                photos:send_photos
+            });
+        })
+    })
 });
 
 /*
@@ -420,9 +550,12 @@ app.post('/commentsOfPhoto/:photo_id', function(request, response) {
         return;
     }
 
-    var user_id = request.session.user_id;
+    var user_id = request.session.user_id;  // who posted this comment
     var photo_id = request.params.photo_id;
     var comment = request.body.comment;
+    var owner_id = request.body.owner_id;
+    // And here is date_time which is default
+    var newComment = {comment: comment, user_id: user_id,photo_id:photo_id,owner_id:owner_id};
 
     // Your implementation should reject any empty comments with a status of 400 (Bad request)
     if (!comment) {
@@ -431,14 +564,23 @@ app.post('/commentsOfPhoto/:photo_id', function(request, response) {
     } else {
         Photo.findOne({_id: photo_id}, function(err, photo) {
             if (!err) {
-                photo.comments.push({comment: comment, user_id: user_id});
+                photo.comments.push(newComment);
                 photo.save();
                 console.log(photo);
-                response.status(200).send();
+                //response.status(200).send();
             } else {
                 console.log("Photo does not exist");
                 response.status(400).send("Photo does not exist");
             }
+        });
+
+        Comment.create(newComment,function(err,createdComment){
+            console.log(newComment);
+            if (err) {
+                console.log(err);
+                response.status(400).send("Error uploading photo");
+            }
+            response.status(200).send();
         });
     }
 });
@@ -467,6 +609,10 @@ app.post('/deletePhoto', function(request, response) {
         });
         response.status(200).end();
     });
+    Comment.remove({photo_id:photo_id}, function(err, comments){
+        if(err) console.log(err);
+        console.log('Successfully deleted：' + comments);
+    })
 });
 
 app.post('/deleteComment', function(request, response) {
@@ -497,6 +643,10 @@ app.post('/deleteComment', function(request, response) {
             response.status(400).send("No such comment!");
         }
     });
+    Comment.remove({_id:comment_id}, function(err, comments){
+        if(err) console.log(err);
+        console.log('Successfully deleted：' + comments);
+    })
 });
 
 
@@ -586,33 +736,3 @@ var server = app.listen(3000, function () {
     var port = server.address().port;
     console.log('Listening at http://localhost:' + port + ' exporting the directory ' + __dirname);
 });
-
-
-// This part is for password salt
-
-// var crypto = require('crypto');
-// function makePasswordEntry(clearTextPassword) {
-//     var hash = crypto.createHash('sha1');
-//     var salt = crypto.randomBytes(8).toString('hex');
-//     hash.update(clearTextPassword + salt);
-//     return {
-//         salt: salt,
-//         hash: hash.digest('hex')
-//     };
-// }
-//
-// /*
-//  * Return true if the specified clear text password
-//  * and salt generates the specified hash.
-//  * @param {string} hash
-//  * @param {string} salt
-//  * @param {string} clearTextPassword
-//  * @return {boolean}
-//  */
-// function doesPasswordMatch(hash, salt, clearTextPassword) {
-//     var hash2 = crypto.createHash('sha1');
-//     hash2.update(clearTextPassword + salt);
-//     var password = hash2.digest('hex');
-//     return password === hash;
-// }
-

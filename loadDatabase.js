@@ -32,6 +32,7 @@ mongoose.connect('mongodb://localhost/cs142project6');
 var User = require('./schema/user.js');
 var Photo = require('./schema/photo.js');
 var SchemaInfo = require('./schema/schemaInfo.js');
+var Comment = require('./schema/comment.js');
 
 var versionString = '1.0';
 
@@ -70,25 +71,8 @@ Promise.all(removePromises).then(function () {
     });
 
 
-    // var commentModels = cs142models.commentModel();
-    // var commentPromises = commentModels.map(function (comment) {
-    //     return Comment.create({
-    //         _id: comment._id,
-    //         date_time: comment.date_time,
-    //         comment: comment.comment,
-    //         user: comment.user,
-    //         photo_id: comment.photo_id
-    //     }, function (err, commentObj) {
-    //         if (err) {
-    //             console.error('Error create comment', err);
-    //         } else {
-    //             // Set the unique ID of the object. We use the MongoDB generated _id for now
-    //             // but we keep it distinct from the MongoDB ID so we can go to something
-    //             // prettier in the future since these show up in URLs, etc.
-    //             commentObj.save();
-    //         }
-    //     });
-    // });
+    var commentModels = cs142models.commentModel();
+
 
 
     var allPromises = Promise.all(userPromises).then(function () {
@@ -137,6 +121,39 @@ Promise.all(removePromises).then(function () {
                     console.error('Error create schemaInfo', err);
                 } else {
                     console.log('SchemaInfo object created with version ', versionString);
+                }
+            });
+        });
+        var commentPromise = commentModels.map(function (comment) {
+            console.log(comment.photo_id + "!");
+            return Comment.create({
+                _id: comment._id,
+                date_time: comment.date_time,
+                comment: comment.comment,
+                user: comment.user,
+                photo_id: comment.photo_id
+            }, function (err, commentObj) {
+                if (err) {
+                    console.error('Error create comment', err);
+                } else {
+                    commentObj.save();
+                }
+            });
+        });
+    }).then(function () {
+        commentModels.map(function (comment) {
+            console.log(comment.photo_id + "!");
+            return Comment.create({
+                _id: comment._id,
+                date_time: comment.date_time,
+                comment: comment.comment,
+                user: comment.user,
+                photo_id: comment.photo_id
+            }, function (err, commentObj) {
+                if (err) {
+                    console.error('Error create comment', err);
+                } else {
+                    commentObj.save();
                 }
             });
         });

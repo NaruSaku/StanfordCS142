@@ -49,10 +49,51 @@ cs142-main- here.
     justify-content: center;
 }
 
+.cs142-main-searchComment{
+    display: inline-flex;
+    align-items: center;
+}
+
+.cs142-main-comment{
+    width: 100px;
+    margin-right: 5px;
+}
 .cs142-main-sidenav{
     background:url("/images/demo-1-bg.jpg");
 }
 
 md-content{
     background:url("/images/background.jpeg") repeat;
+}
+
+input[type="file"] {
+    color: transparent;
+    width:200px;
+}
+/*Reference: https://codepen.io/zengkan0703/pen/NpyxbM*/
+.file-input{
+    line-height:30px;
+    position:relative;
+    margin-top:10px;
+}
+.file-input .input-container{
+    width:100px;
+    height:30px;
+    text-align:center;
+    background:#3778d8;
+    color:#fff;
+    border-radius:3px;
+}
+.file-input input{
+    position:absolute;
+    left:0;
+    top:0;
+    opacity:0;
+}
+.file-input #name{
+    position:absolute;
+    left:100px;
+    top:0;
+    font-size:12px;
+    color:#666;
 }

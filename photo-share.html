@@ -30,6 +30,12 @@
     <script src="components/login-register/login-registerController.js"></script>
     <link rel="stylesheet" type="text/css" href="components/login-register/login-register.css"/>
 
+    <script src="components/comment/commentController.js"></script>
+    <link rel="stylesheet" type="text/css" href="components/comment/comment.css"/>
+
+    <script src="components/visibility-control/visibility-controlController.js"></script>
+    <link rel="stylesheet" type="text/css" href="components/visibility-control/visibility-control.css" />
+
     <script src="cs142password.js"></script>
 
 
@@ -54,13 +60,24 @@
 
             <div ng-show="main.loggedInUser">
                 <form>
-                    <input type="file" accept="image/*"  onchange="angular.element(this).scope().main.inputFileNameChanged(this)">
+                    <div class="file-input">
+                        <p class="input-container">
+                            Upload
+                            <input type="file" accept="image/*" onchange="angular.element(this).scope().main.inputFileNameChanged(this)">
+                        </p>
+                        <span id="name"></span>
+                    </div>
                 </form>
             </div>
 
             <div ng-show="main.loggedInUser" class="cs142-main-barElement" title="Only show one picture each page">
                 <input type="checkbox" id="advanced-feature">Advanced Feature
             </div>
+
+            <form ng-submit="main.submit()" class="cs142-main-searchComment" ng-show="main.loggedInUser">
+                <span><input ng-model="main.comment" class="cs142-main-comment"></span>
+                <span><button>Search Comment</button></span>
+            </form>
 
             <div class="cs-142-main-rightSide" ng-show="main.loggedInUser">
                 {{main.appContext}}&nbsp;&nbsp;
