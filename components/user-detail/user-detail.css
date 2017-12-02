@@ -6,6 +6,9 @@
     margin-bottom: 0;
     font-size: 35px;
     padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .cs142-detail-userLocation{

@@ -1,7 +1,7 @@
 "use strict";
 
-cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource','$location','$rootScope',
-    function ($scope, $routeParams, $resource, $location,$rootScope) {
+cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource','$location','$rootScope','$mdDialog','$http',
+    function ($scope, $routeParams, $resource, $location,$rootScope,$mdDialog,$http) {
         /*
          * Since the route is specified as '/users/:userId' in $routeProvider config the
          * $routeParams  should have the userId property set with the path from the URL.
@@ -28,5 +28,33 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
         $scope.userDetail.showDetail = function(photo){
             $scope.$emit("emitSinglePhoto",photo);
             $location.path("/photos/" + photo.user_id);
+        };
+
+        $scope.userDetail.hasAuthority = function () {
+            if ($scope.main.loggedInUser === undefined) return false;
+            return $scope.main.loggedInUser._id === userId;
+        };
+
+        $scope.userDetail.deleteAccount = function (ev) {
+            if (!$scope.userDetail.hasAuthority) return;
+            var confirm = $mdDialog.confirm()
+                .title('This will delete the all the information in your account!')
+                .textContent('This action cannot be revoked')
+                .targetEvent(ev)
+                .ok('Delete Anyway')
+                .cancel('Cancel');
+
+            $mdDialog.show(confirm).then(function() {
+                $http.post('/deleteAccount', JSON.stringify({user:$scope.main.loggedInUser})).then(function successCallback(response) {
+                    $scope.main.loggedInUser = undefined;
+                    $rootScope.$broadcast("accountDeleted");
+                    $location.path("/login-register");
+                }, function errorCallback(response) {
+                    console.log(response.data);
+                });
+            }, function() {
+                console.log("You don't want to delete the account at present.")
+            });
+
         }
     }]);

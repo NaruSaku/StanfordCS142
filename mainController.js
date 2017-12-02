@@ -38,14 +38,13 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         $scope.main.loggedInUser = undefined;
         $scope.main.selectedPhotoFile = undefined;
 
-        $rootScope.$on( "$routeChangeStart", function(event, next, current) {
+        $rootScope.$on("$routeChangeStart", function(event, next, current) {
             if ($scope.main.loggedInUser === undefined) {
                 // no logged user, redirect to /login-register unless already there
                 // This part is used to hold the session
                 var requestBody = {login_name:"session"};
                 $http.post('/admin/login', JSON.stringify(requestBody)).then(function successCallback(response) {
                     if (response){
-                        //console.log(response.data);
                         $scope.main.loggedInUser = response.data.user;
                         if (response.data.photo_user_id){
                             $location.path("/photos/" + response.data.photo_user_id);
@@ -74,6 +73,7 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
 
         /* Reference:http://blog.csdn.net/YYecust/article/details/52419522 */
         $scope.main.controlVisibility = function() {
+            console.log("Begin to upload photo.");
             var child = $scope.$new(false,$scope);
             $mdDialog.show({
                 clickOutsideToClose: true,
@@ -92,13 +92,9 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
             });
         };
 
-
-
-
         //Called on file selection - we simply save a reference to the file in selectedPhotoFile
         $scope.main.inputFileNameChanged = function (element) {
             $scope.main.selectedPhotoFile = element.files[0];
-            //$scope.main.uploadPhoto();
             $scope.main.controlVisibility();
         };
 

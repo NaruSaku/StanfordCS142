@@ -187,7 +187,7 @@ app.get('/user/list', function (request, response) {
  */
 app.get('/user/:id', function (request, response) {
     if (!request.session.user_id) {
-        response.status(401).send('unauthorized');
+        response.status(401).send('Get the user unauthorized');
         return;
     }
     var id = request.params.id;
@@ -229,7 +229,9 @@ app.get('/userPhoto/:id', function (request, response) {
         });
         if (photoList.length > 0){
             mostRecentlyPhoto = photoList[photoList.length - 1];
+            mostCommentsPhoto = photoList[0];
             send_body.mostRecentlyPhoto = mostRecentlyPhoto;
+            send_body.mostCommentsPhoto = mostCommentsPhoto;
             var photos = JSON.parse(JSON.stringify(photoList));
             async.each(photos,function (photo,photo_callback) {
                 if (photo.comments.length > commentNum){
@@ -411,11 +413,15 @@ app.get('/photosOfUser/:id', function (request, response) {
                     if (err) {
                         console.log('Database find() returned error:');
                         console.log(JSON.stringify(err));
-                    } else if (commentator === null) {
-                        console.log('User with _id:' + comments.user_id + ' not found.');
-                    } else {
-                        comment.date_time = changeDateFormat(comment.date_time);
-                        comment.user = commentator;
+                    }  else {
+                        if (commentator === null) {
+                            //console.log('Commentator with _id:' + comments.user_id + ' not found.');
+                            var index = comments.indexOf(comment);
+                            comments.splice(index,1);
+                        } else {
+                            comment.date_time = changeDateFormat(comment.date_time);
+                            comment.user = commentator;
+                        }
                         comment_callback();
                     }
                 });
@@ -475,7 +481,7 @@ app.post('/admin/login', function(request, response) {
 app.post('/admin/logout', function(request, response) {
     if (request.session.user_id) {
         request.session.destroy(function(err) {} );
-        session.user_id = "";
+        //session.user_id = "";
         response.status(200).send();
     } else {
         response.status(400).send("No user currently logged in");
@@ -512,7 +518,7 @@ app.post('/user', function(request, response) {
                 return;
             }
             request.session.user_id = createdUser._id;
-            session.user_id = createdUser._id;
+            //session.user_id = createdUser._id;
 
             console.log(createdUser._id);
 
@@ -586,33 +592,60 @@ app.post('/commentsOfPhoto/:photo_id', function(request, response) {
     var comment = request.body.comment;
     var owner_id = request.body.owner_id;
     // And here is date_time which is default
-    var newComment = {comment: comment, user_id: user_id,photo_id:photo_id,owner_id:owner_id};
+    var newComment = new Comment({
+        comment: comment,
+        user_id: user_id,
+        photo_id:photo_id,
+        owner_id:owner_id
+    });
 
     // Your implementation should reject any empty comments with a status of 400 (Bad request)
     if (!comment) {
         console.log("The comment is empty!");
         response.status(400).send("The comment is empty!");
     } else {
-        Photo.findOne({_id: photo_id}, function(err, photo) {
-            if (!err) {
-                photo.comments.push(newComment);
-                photo.save();
-                console.log(photo);
-                //response.status(200).send();
-            } else {
-                console.log("Photo does not exist");
-                response.status(400).send("Photo does not exist");
-            }
-        });
-
-        Comment.create(newComment,function(err,createdComment){
-            console.log(newComment);
+        newComment.save(function (err,res) {
             if (err) {
-                console.log(err);
-                response.status(400).send("Error uploading photo");
+                console.log("Error:" + err);
             }
-            response.status(200).send();
+            else {
+                Photo.findOne({_id: photo_id}, function(err, photo) {
+                    if (!err) {
+                        photo.comments.push(newComment);
+                        photo.save();
+                        console.log(photo);
+                        response.status(200).send();
+                        //response.status(200).send();
+                    } else {
+                        console.log("Photo does not exist");
+                        response.status(400).send("Photo does not exist");
+                    }
+                });
+            }
         });
+        // Comment.create(newComment,function(err){
+        //     console.log(newComment);
+        //     if (err) {
+        //         console.log(err);
+        //         response.status(400).send("Error uploading photo");
+        //     }
+        //     Photo.findOne({_id: photo_id}, function(err, photo) {
+        //         if (!err) {
+        //             photo.comments.push(newComment);
+        //             photo.save();
+        //             console.log(photo);
+        //             response.status(200).send();
+        //             //response.status(200).send();
+        //         } else {
+        //             console.log("Photo does not exist");
+        //             response.status(400).send("Photo does not exist");
+        //         }
+        //     });
+        //
+        // });
+
+
+
     }
 });
 
@@ -680,6 +713,34 @@ app.post('/deleteComment', function(request, response) {
 });
 
 
+app.post('/deleteAccount', function(request, response) {
+    var user_id = request.body.user._id;
+    if (request.session.user_id !== user_id){
+        response.status(401).send('Unauthorized');
+        return;
+    }
+    console.log("User" + request.body.user.last_name + "is to be deleted");
+    User.findOne({_id: user_id}, function(err, user) {
+        if (err) {
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        if(!user) {
+            response.status(400).send("No such user");
+        }
+
+        User.remove({_id: user_id}, function(err) {});
+        Photo.remove({user_id: user_id}, function(err) {});
+        Comment.remove({user_id: user_id}, function(err) {});
+        request.session.destroy(function(err) {} );
+        response.status(200).send();
+    });
+
+});
+
+
+
+
 // This part is built by myself to record how many times a photo has been viewed
 // I hope it will not be counted as an extra property
 // Oh, I think I have to comment this paragraph temporarily
@@ -710,6 +771,7 @@ app.post('/likePhoto', function(request, response) {
             response.status(400).send(JSON.stringify(err));
             return;
         }
+        photo.view_times--;
         if (photo.dislike_user_ids.indexOf(user_id) >= 0){
             response.status(400).send("You have already disliked this photo.");
             return;
@@ -735,6 +797,7 @@ app.post('/dislikePhoto', function(request, response) {
             response.status(400).send(JSON.stringify(err));
             return;
         }
+        photo.view_times--;
         if (photo.like_user_ids.indexOf(user_id) >= 0){
             response.status(400).send("You have already liked this photo.");
             return;

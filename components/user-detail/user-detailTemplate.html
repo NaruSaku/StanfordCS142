@@ -1,7 +1,12 @@
 <div class="cs142-detail-properties">
     <div class="cs142-detail-name">
-        <span class="cs142-detail-userName">{{userDetail.fullName}}</span>
-        <span class="cs142-detail-userLocation">{{userDetail.user.location}}</span>
+        <div>
+            <span class="cs142-detail-userName">{{userDetail.fullName}}</span>
+            <span class="cs142-detail-userLocation">{{userDetail.user.location}}</span>
+        </div>
+        <md-button class="md-warn md-raised" ng-show="userDetail.hasAuthority()"ng-click="userDetail.deleteAccount($event)" >
+            Delete Account
+        </md-button>
     </div>
     <a ng-href="{{'#!/photos/' + userDetail.user._id}}">
         <span class="cs142-detail-photosLink">See the photos!</span>

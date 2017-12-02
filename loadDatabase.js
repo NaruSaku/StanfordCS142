@@ -124,22 +124,22 @@ Promise.all(removePromises).then(function () {
                 }
             });
         });
-        var commentPromise = commentModels.map(function (comment) {
-            console.log(comment.photo_id + "!");
-            return Comment.create({
-                _id: comment._id,
-                date_time: comment.date_time,
-                comment: comment.comment,
-                user: comment.user,
-                photo_id: comment.photo_id
-            }, function (err, commentObj) {
-                if (err) {
-                    console.error('Error create comment', err);
-                } else {
-                    commentObj.save();
-                }
-            });
-        });
+        // var commentPromise = commentModels.map(function (comment) {
+        //     console.log(comment.photo_id + "!");
+        //     return Comment.create({
+        //         _id: comment._id,
+        //         date_time: comment.date_time,
+        //         comment: comment.comment,
+        //         user: comment.user,
+        //         photo_id: comment.photo_id
+        //     }, function (err, commentObj) {
+        //         if (err) {
+        //             console.error('Error create comment', err);
+        //         } else {
+        //             commentObj.save();
+        //         }
+        //     });
+        // });
     }).then(function () {
         commentModels.map(function (comment) {
             console.log(comment.photo_id + "!");
