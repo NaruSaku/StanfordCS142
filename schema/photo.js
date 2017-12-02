@@ -32,7 +32,9 @@ var photoSchema = new mongoose.Schema({
     like_num: {type: Number, default: 0},
     dislike_num: {type: Number, default: 0},
     like_user_ids: {type:[mongoose.Schema.Types.ObjectId], default: []},
-    dislike_user_ids: {type:[mongoose.Schema.Types.ObjectId], default: []}
+    dislike_user_ids: {type:[mongoose.Schema.Types.ObjectId], default: []},
+    control: {type: Boolean, default: false},
+    visibleList: {type: [mongoose.Schema.Types.ObjectId], default: []}
 });
 
 // the schema is useless so far

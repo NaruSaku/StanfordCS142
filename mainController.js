@@ -30,8 +30,8 @@ cs142App.config(['$routeProvider',
         });
     }]);
 
-cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$rootScope','$location','$http',
-    function ($scope, $mdSidenav,$resource,$rootScope,$location,$http) {
+cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$rootScope','$location','$http','$mdDialog',
+    function ($scope, $mdSidenav,$resource,$rootScope,$location,$http,$mdDialog) {
         $scope.main = {};
         $scope.main.title = 'CS142 Photo Sharing Website';
         $scope.main.authorName = "Ji Yu";
@@ -45,8 +45,13 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                 var requestBody = {login_name:"session"};
                 $http.post('/admin/login', JSON.stringify(requestBody)).then(function successCallback(response) {
                     if (response){
-                        $scope.main.loggedInUser = response.data;
-                        $location.path("/users/" + $scope.main.loggedInUser._id);
+                        //console.log(response.data);
+                        $scope.main.loggedInUser = response.data.user;
+                        if (response.data.photo_user_id){
+                            $location.path("/photos/" + response.data.photo_user_id);
+                        } else {
+                            $location.path("/users/" + response.data.user_detail_id);
+                        }
                     }
                 }, function errorCallback(response) {
                     console.log(response.data);
@@ -68,20 +73,23 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         };
 
         /* Reference:http://blog.csdn.net/YYecust/article/details/52419522 */
-        $scope.main.showAdvanced = function() {
+        $scope.main.controlVisibility = function() {
+            var child = $scope.$new(false,$scope);
             $mdDialog.show({
-                controller: 'DialogController',
-                scope: $scope.$new(),
-                templateUrl: 'components/dialog/dialogTemplate.html',
-                parent: angular.element(document.body)
-            }).then(function(trusted_users) {
-                    var restricted = true;
-                    $scope.main.uploadPhoto(restricted, trusted_users);
-                }, function() {
-                    var restricted = false;
-                    var trusted_users = [];
-                    $scope.main.uploadPhoto(restricted, trusted_users);
-                });
+                clickOutsideToClose: true,
+                controller: 'visibilityControlController',
+                scope: child,
+                templateUrl: 'components/visibility-control/visibility-controlTemplate.html'
+            }).then(function(result) {
+                if (result.passed){
+                    $scope.main.uploadPhoto(true, result.data);
+                }
+            }, function(result) {
+                if (result){
+                    var visibleList = [];
+                    $scope.main.uploadPhoto(false, visibleList);
+                }
+            });
         };
 
 
@@ -90,8 +98,8 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         //Called on file selection - we simply save a reference to the file in selectedPhotoFile
         $scope.main.inputFileNameChanged = function (element) {
             $scope.main.selectedPhotoFile = element.files[0];
-            $scope.main.uploadPhoto();
-            //$scope.main.showAdvanced();
+            //$scope.main.uploadPhoto();
+            $scope.main.controlVisibility();
         };
 
         $scope.main.inputFileNameSelected = function () {
@@ -99,7 +107,7 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         };
 
         // Upload the photo file selected by the user using a post request to the URL /photos/new
-        $scope.main.uploadPhoto = function () {
+        $scope.main.uploadPhoto = function (control, visibleList) {
             if (!$scope.main.inputFileNameSelected()) {
                 console.error("uploadPhoto called will no selected file");
                 return;
@@ -108,6 +116,8 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
 
             var domForm = new FormData();
             domForm.append('uploadedphoto', $scope.main.selectedPhotoFile);
+            domForm.append('control', control);
+            domForm.append('visibleList', visibleList);
 
             // Using $http to POST the form
             $http.post('/photos/new', domForm, {
@@ -116,12 +126,11 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
             }).then(function successCallback(response){
                 $rootScope.$broadcast("photoUploaded");
                 $location.path("/photos/" + $scope.main.loggedInUser._id);
-                console.log(response);
+                console.log("Photo has been uploaded successfully!");
             }, function errorCallback(response){
                 // Couldn't upload the photo. XXX  - Do whatever you want on failure.
                 console.error('ERROR uploading photo', response);
             });
-
         };
 
 

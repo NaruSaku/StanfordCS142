@@ -23,6 +23,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         $scope.userPhotos.checked = obj.checked;
 
         $scope.userPhotos.reload = function () {
+            console.log("The reload has been called");
             user.get({'userId': userId}, function(user) {
                 $scope.userPhotos.fullName = user.first_name + " " + user.last_name;
                 $scope.main.appContext = "The Photos of " + $scope.userPhotos.fullName;

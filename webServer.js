@@ -153,12 +153,16 @@ app.get('/user/list', function (request, response) {
 
         // !!!important
         var userList2 = JSON.parse(JSON.stringify(userList));
+
         async.each(userList2,function (user,callback){
             Photo.find({user_id:user._id},function (err,photos) {
                 if (err){
                     console.log("User" + user + "has no photos.");
                 }
-
+                /*This part is to filter the photos who have the authority*/
+                photos = photos.filter(function(photo) {
+                    return (!photo.control || (photo.visibleList.indexOf(request.session.user_id) >= 0));
+                });
                 user.photoLength = photos.length;
                 photoNum.push(photos.length);
                 callback();
@@ -187,6 +191,10 @@ app.get('/user/:id', function (request, response) {
         return;
     }
     var id = request.params.id;
+    /*This part is to test the photo link*/
+    //request.session.photo_user_id = user_id;
+    request.session.photo_user_id = "";
+    request.session.user_detail_id = id;
     User.findOne({'_id':id},function (err,userDetail) {
         if (err){
             response.status(400).send(JSON.stringify(err));
@@ -200,7 +208,7 @@ app.get('/user/:id', function (request, response) {
         response.status(200).send(userDetail);
     })
 });
-
+/*This part is used to get the photo recently updated and with most comments*/
 app.get('/userPhoto/:id', function (request, response) {
     if (!request.session.user_id) {
         response.status(401).send('unauthorized');
@@ -216,6 +224,9 @@ app.get('/userPhoto/:id', function (request, response) {
         var mostRecentlyPhoto = {};
         var mostCommentsPhoto = {};
         var commentNum = 0;
+        photoList = photoList.filter(function(photo) {
+            return (!photo.control || (photo.visibleList.indexOf(request.session.user_id) >= 0));
+        });
         if (photoList.length > 0){
             mostRecentlyPhoto = photoList[photoList.length - 1];
             send_body.mostRecentlyPhoto = mostRecentlyPhoto;
@@ -374,6 +385,9 @@ app.get('/photosOfUser/:id', function (request, response) {
         return;
     }
     var user_id = request.params.id;
+    /*This part is to test the photo link*/
+    request.session.photo_user_id = user_id;
+    // request.session.photo_user_id.destroy(function(err) {} );
     Photo.find({'user_id': user_id}, function(err, photoList) {
         if (err) {
             response.status(400).send(JSON.stringify(err));
@@ -385,6 +399,10 @@ app.get('/photosOfUser/:id', function (request, response) {
             return;
         }
         var photos = JSON.parse(JSON.stringify(photoList));
+        /*This part is to filter the photos who have the authority*/
+        photos = photos.filter(function(photo) {
+            return (!photo.control || (photo.visibleList.indexOf(request.session.user_id) >= 0));
+        });
         async.each(photos,function (photo,photo_callback) {
             var comments = photo.comments;
             photo.date_time = changeDateFormat(photo.date_time);
@@ -428,7 +446,9 @@ app.post('/admin/login', function(request, response) {
             if (err){
                 request.status(400).send();
             }
-            response.status(200).send(user);
+            var photo_user_id = request.session.photo_user_id;
+            var user_detail_id = request.session.user_detail_id;
+            response.status(200).send({user:user,photo_user_id:photo_user_id,user_detail_id:user_detail_id});
         });
         return;
     }
@@ -440,7 +460,8 @@ app.post('/admin/login', function(request, response) {
         if (user !== null) {
             if(cs142password.doesPasswordMatch(user.password_digest, user.salt, request.body.password)){
                 request.session.user_id = user._id;
-                session.user_id = user._id;
+                request.session.user_detail_id = user._id;
+                //session.user_id = user._id;
                 response.status(200).send(user);
             } else {
                 response.status(400).send("Password is not correct!");
@@ -460,7 +481,7 @@ app.post('/admin/logout', function(request, response) {
         response.status(400).send("No user currently logged in");
     }
 });
-
+/*This part is used for register*/
 app.post('/user', function(request, response) {
     var userName = request.body.userName;
     if (userName === undefined){
@@ -521,6 +542,10 @@ app.post('/photos/new', function(request, response) {
         var timestamp = new Date().valueOf();
         var filename = 'U' +  String(timestamp) + request.file.originalname;
 
+        var visibleList = request.body.visibleList.split(',');
+        var control = (request.body.control === "true");
+        console.log("control in web server:" + control);
+
         fs.writeFile("./images/" + filename, request.file.buffer, function (err) {
             // XXX - Once you have the file written into your images directory under the name
             // filename you can create the Photo object in the database
@@ -531,13 +556,19 @@ app.post('/photos/new', function(request, response) {
             var newPhoto = {
                 file_name: filename,
                 user_id: request.session.user_id,
-                comments: []
+                comments: [],
+                control:control,
+                date_time:new Date().toLocaleString()
             };
+            if (control){
+                newPhoto.visibleList=visibleList;
+            }
             Photo.create(newPhoto, function(err, createdPhoto) {
                 if (err) {
                     console.log(err);
                     response.status(400).send("Error uploading photo");
                 }
+                console.log("shit");
                 response.status(200).send(createdPhoto);
             });
         });
@@ -618,7 +649,6 @@ app.post('/deletePhoto', function(request, response) {
 app.post('/deleteComment', function(request, response) {
     var comment_id = request.body.comment_id;
     var photo_id = request.body.photo_id;
-    var user_id = request.session.user_id;
 
     Photo.findOne({_id: photo_id}, function(err, photo) {
         if (err) {
