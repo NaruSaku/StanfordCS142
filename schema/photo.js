@@ -29,8 +29,6 @@ var photoSchema = new mongoose.Schema({
     date_time: {type: String, default: new Date().toLocaleString()}, // 	The date and time when the photo was added to the database
     user_id: mongoose.Schema.Types.ObjectId, // The ID of the user who created the photo.
     comments: {type:[commentSchema],default:[]}, // Array of comment objects representing the comments made on this photo.
-    like_num: {type: Number, default: 0},
-    dislike_num: {type: Number, default: 0},
     like_user_ids: {type:[mongoose.Schema.Types.ObjectId], default: []},
     dislike_user_ids: {type:[mongoose.Schema.Types.ObjectId], default: []},
     control: {type: Boolean, default: false},

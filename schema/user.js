@@ -14,9 +14,13 @@ var userSchema = new mongoose.Schema({
     description: String,  // A brief user description
     occupation: String,    // Occupation of the user.
     login_name: String,
-    //password: String,
     password_digest: String,
-    salt: String
+    salt: String,
+    recentActivity: {type:String,default:"registered as a user"},
+    recently_upload_photo: {type:Boolean,default:false},
+    recent_uploaded_photo:String,
+    photo_liked_list:{type:[String],default:[]},
+    photo_disliked_list:{type:[String],default:[]}
 });
 
 // the schema is useless so far

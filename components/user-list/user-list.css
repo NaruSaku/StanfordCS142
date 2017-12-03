@@ -13,8 +13,7 @@
     margin-bottom: 3px;
     background: gray;
     opacity: 0.5;
-    display: flex;
-    justify-content: space-between;
+
 }
 .cs142-user-list-a a{
     font-size: 25px;
@@ -37,7 +36,19 @@
     text-align: center;
     background: green;
     border-radius: 15px;
+    float: right;
     padding-left: 0 !important;
+    margin-left: 3px;
+}
+
+.cs142-user-list-bubble2 {
+    font-size: 25px;
+    height: 30px;
+    width: 30px;
+    text-align: center;
+    background: green;
+    border-radius: 15px;
+    float: right;
 }
 
 .cs142-user-list-bubble1:hover{
@@ -51,4 +62,11 @@ a{
 md-sidenav{
     top:59px;
     background-color: #efefef;
+}
+
+.thumbnail{
+    margin: 0em;
+    height: 4em;
+    width: 4em;
+    display: block;
 }

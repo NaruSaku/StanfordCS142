@@ -30,9 +30,18 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
             });
 
             userPhotos.query({'userId': userId},function (photos) {
+                photos = photos.sort(function (photo1, photo2) {
+                    if(photo1.like_user_ids.length > photo2.like_user_ids.length) {
+                        return -1;
+                    }
+                    if(photo1.like_user_ids.length < photo2.like_user_ids.length) {
+                        return 1;
+                    }
+                    return 0;
+                });
+
                 $scope.userPhotos.photos = photos;
                 $scope.userPhotos.photos2= photos;
-                //console.log(photos.length);
                 if (photos.length === 0){
                     $scope.userPhotos.noPhotos = true;
                 }
@@ -67,6 +76,13 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         $scope.userPhotos.addComment = function(photo) {
             var data = JSON.stringify({comment: $scope.userPhotos.newComment,owner_id:photo.user_id});
             $http.post("/commentsOfPhoto/" + photo._id, data).then(function successCallback(response) {
+                $http.post('/recentActivity/',JSON.stringify({
+                    activity: "added a comment",
+                    user_id: $scope.main.loggedInUser._id
+                })).then(function () {
+                    console.log("Activity updated");
+                    $rootScope.$broadcast('listUpdated');
+                });
                 $rootScope.$broadcast("commentAdded");
                 console.log(response.data);
             }, function errorCallback(response) {

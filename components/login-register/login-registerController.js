@@ -49,6 +49,12 @@ cs142App.controller('LoginRegisterController', ['$scope', '$resource', '$http', 
                         $cookies.put($scope.login.loginName,$scope.login.password);
                     }
                     $scope.main.loggedInUser = response.data;
+                    $http.post('/recentActivity/',JSON.stringify({
+                        activity: "logged in",
+                        user_id: $scope.main.loggedInUser._id
+                    })).then(function () {
+                        $rootScope.$broadcast('listUpdated');
+                    });
                     $rootScope.$broadcast('loggedIn');
                     $location.path("/users/" + $scope.main.loggedInUser._id);
                 }, function errorCallback(response) {
@@ -85,6 +91,12 @@ cs142App.controller('LoginRegisterController', ['$scope', '$resource', '$http', 
             };
             $http.post('/user', JSON.stringify(registerSent)).then(function successCallback(response) {
                 $scope.main.loggedInUser = response.data;
+                $http.post('/recentActivity/',JSON.stringify({
+                    activity: "registered as a user",
+                    user_id: $scope.main.loggedInUser._id
+                })).then(function () {
+                    $rootScope.$broadcast('listUpdated');
+                });
                 $rootScope.$broadcast('loggedIn');
                 $location.path("/users/" + $scope.main.loggedInUser._id);
                 $scope.register.reset();

@@ -4,5 +4,6 @@
     <div ng-repeat="user in userList.userNames" class="cs142-user-list-a">
         <a ng-href="#!users/{{user._id}}">{{user.first_name}} {{user.last_name}}</a>
         <a class="cs142-user-list-bubble1" ng-href="{{'#!/photos/' + user._id}}">{{user.photoLength}}</a>
+        <div class="cs142-user-list-bubble2" ng-click="userList.showRecentActivity($event,user)">?</div>
     </div>
 </div>

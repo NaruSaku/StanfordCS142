@@ -120,6 +120,13 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                 transformRequest: angular.identity,
                 headers: {'Content-Type': undefined}
             }).then(function successCallback(response){
+                $http.post('/recentActivity/',JSON.stringify({
+                    activity: "posted a photo",
+                    user_id: $scope.main.loggedInUser._id
+                })).then(function () {
+                    $rootScope.$broadcast('listUpdated');
+                });
+
                 $rootScope.$broadcast("photoUploaded");
                 $location.path("/photos/" + $scope.main.loggedInUser._id);
                 console.log("Photo has been uploaded successfully!");
@@ -137,6 +144,12 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         });
 
         $scope.main.logout = function() {
+            $http.post('/recentActivity/',JSON.stringify({
+                activity: "logged out",
+                user_id: $scope.main.loggedInUser._id
+            })).then(function () {
+                $rootScope.$broadcast('listUpdated');
+            });
             $http.post('/admin/logout','').then(function successCallback(response) {
                 $scope.main.loggedInUser = undefined;
                 $location.path("/login-register");

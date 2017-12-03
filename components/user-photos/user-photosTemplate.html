@@ -16,12 +16,12 @@
         </div>
         <div class="cs142-photos-photoLike">
             <div class="cs142-photos-like">
-                <img  ng-src="/images/like3.jpg" ng-click = "userPhotos.like(photo)">
-                {{photo.like_num}}
+                <img ng-src="/images/like3.jpg" ng-click = "userPhotos.like(photo)">
+                {{photo.like_user_ids.length}}
             </div>
             <div class="cs142-photos-like">
                 <img ng-src="/images/dislike2.png" ng-click = "userPhotos.dislike(photo)">
-                {{photo.dislike_num}}
+                {{photo.dislike_user_ids.length}}
             </div>
 
         </div>

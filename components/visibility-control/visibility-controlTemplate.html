@@ -1,6 +1,8 @@
 <md-dialog>
     <!--Reference:https://material.angularjs.org/latest/api/service/$mdDialog-->
     <form ng-cloak>
+        <md-toolbar>
+        </md-toolbar>
         <md-dialog-content>
             <div class="md-dialog-content">
                 <h1>Specify a list of users that can see the photo</h1>
@@ -16,7 +18,7 @@
         </md-dialog-content>
 
         <md-dialog-actions>
-            <md-button ng-click="visibility.cancel()">
+            <md-button class="md-primary"ng-click="visibility.cancel()">
                 Everybody can see your photo
             </md-button>
             <md-button ng-click="visibility.answer()">

@@ -1,7 +1,7 @@
 'use strict';
 
-cs142App.controller('UserListController', ['$scope','$resource',
-    function ($scope,$resource) {
+cs142App.controller('UserListController', ['$scope','$resource','$mdDialog',
+    function ($scope,$resource,$mdDialog) {
         $scope.main.title = 'Users';
         $scope.userList = {};
         $scope.userList.userNames = [];
@@ -16,6 +16,20 @@ cs142App.controller('UserListController', ['$scope','$resource',
 
         $scope.userList.reload();
 
+        $scope.userList.showRecentActivity = function(ev,user) {
+            $mdDialog.show({
+                controller: 'DialogController',
+                templateUrl: 'components/user-list/DialogTemplate.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                clickOutsideToClose:true,
+                locals:{
+                    user:user
+                }
+            }).then(function(answer) {}, function() {});
+        };
+
         $scope.$on('photoUploaded', $scope.userList.reload);
         $scope.$on('photoDeleted', $scope.userList.reload);
+        $scope.$on('listUpdated', $scope.userList.reload);
     }]);

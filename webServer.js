@@ -577,6 +577,13 @@ app.post('/photos/new', function(request, response) {
                 console.log("shit");
                 response.status(200).send(createdPhoto);
             });
+            User.findOne({_id:request.session.user_id},function (err,user) {
+                if (err) {
+                    response.status(400).send(JSON.stringify(err));
+                }
+                user.recent_uploaded_photo = "images/" + filename;
+                user.save();
+            })
         });
     });
 });
@@ -596,7 +603,8 @@ app.post('/commentsOfPhoto/:photo_id', function(request, response) {
         comment: comment,
         user_id: user_id,
         photo_id:photo_id,
-        owner_id:owner_id
+        owner_id:owner_id,
+        date_time:new Date().toLocaleString()
     });
 
     // Your implementation should reject any empty comments with a status of 400 (Bad request)
@@ -613,9 +621,7 @@ app.post('/commentsOfPhoto/:photo_id', function(request, response) {
                     if (!err) {
                         photo.comments.push(newComment);
                         photo.save();
-                        console.log(photo);
                         response.status(200).send();
-                        //response.status(200).send();
                     } else {
                         console.log("Photo does not exist");
                         response.status(400).send("Photo does not exist");
@@ -668,6 +674,38 @@ app.post('/deletePhoto', function(request, response) {
             response.status(400).send("Have no authorities!");
             return;
         }
+
+        var like_user_ids_list = photo.like_user_ids;
+        async.each(like_user_ids_list,function (like_user_id,callback) {
+            User.findOne({_id:like_user_id},function (err,user) {
+                if (err) {
+                    response.status(400).send(JSON.stringify(err));
+                    return;
+                }
+                var photo_liked_list = user.photo_liked_list;
+                if (photo_liked_list.indexOf(photo_id) >= 0){
+                    photo_liked_list.remove(photo_id);
+                }
+                user.save();
+                callback();
+            })
+        });
+
+        var dislike_user_ids_list = photo.dislike_user_ids;
+        async.each(dislike_user_ids_list,function (dislike_user_id,callback) {
+            User.findOne({_id:dislike_user_id},function (err,user) {
+                if (err) {
+                    response.status(400).send(JSON.stringify(err));
+                    return;
+                }
+                var photo_disliked_list = user.photo_disliked_list;
+                if (photo_disliked_list.indexOf(photo_id) >= 0){
+                    photo_disliked_list.remove(photo_id);
+                }
+                user.save();
+                callback();
+            })
+        });
         Photo.remove({_id: photo_id}, function(err) {
             // this part is necessary!
         });
@@ -729,8 +767,73 @@ app.post('/deleteAccount', function(request, response) {
             response.status(400).send("No such user");
         }
 
-        User.remove({_id: user_id}, function(err) {});
+        // /**This part is to delete this user has liked which photos*/
+        // var photo_liked_list = user.photo_liked_list;
+        // async.each(photo_liked_list,function (err,photo_id) {
+        //     Photo.findOne({_id:photo_id},function (err,photo) {
+        //         if (err) {
+        //             response.status(400).send(JSON.stringify(err));
+        //             return;
+        //         }
+        //         var like_user_ids = photo.like_user_ids;
+        //         if (like_user_ids.indexOf(user_id) >= 0){
+        //             like_user_ids.remove(user_id);
+        //         }
+        //         photo.save();
+        //     })
+        // });
+        //
+        // /**This part is to delete this user has disliked which photos*/
+        // var photo_disliked_list = user.photo_disliked_list;
+        // async.each(photo_disliked_list,function (err,photo_id) {
+        //     Photo.findOne({_id:photo_id},function (err,photo) {
+        //         if (err) {
+        //             response.status(400).send(JSON.stringify(err));
+        //             return;
+        //         }
+        //         var dislike_user_ids = photo.dislike_user_ids;
+        //         if (dislike_user_ids.indexOf(user_id) >= 0){
+        //             dislike_user_ids.remove(user_id);
+        //         }
+        //         photo.save();
+        //     })
+        // });
+        //
+        // /**
+        //  * This part is to delete the other users have liked or disliked
+        //  * the photos of this user
+        //  */
+        // Photo.remove({user_id: user_id}, function(err,photos) {
+        //     async.each(photos,function (photo,photo_callback) {
+        //         var like_user_ids = photo.like_user_ids;
+        //         async.each(like_user_ids,function (user_id,user_callback) {
+        //             User.findOne({_id:user_id},function (err,user) {
+        //                 var photo_liked_list = user.photo_liked_list;
+        //                 if (photo_liked_list.indexOf(photo.photo_id) >= 0){
+        //                     photo_liked_list.remove(photo.photo_id);
+        //                 }
+        //                 user.save();
+        //                 user_callback();
+        //             })
+        //         });
+        //
+        //         var dislike_user_ids = photo.dislike_user_ids;
+        //         async.each(dislike_user_ids,function (user_id,user_callback) {
+        //             User.findOne({_id:user_id},function (err,user) {
+        //                 var photo_disliked_list = user.photo_disliked_list;
+        //                 if (photo_disliked_list.indexOf(photo.photo_id) >= 0){
+        //                     photo_disliked_list.remove(photo.photo_id);
+        //                 }
+        //                 user.save();
+        //                 user_callback();
+        //             })
+        //         });
+        //         photo_callback();
+        //     })
+        // });
+
         Photo.remove({user_id: user_id}, function(err) {});
+        User.remove({_id: user_id}, function(err,user) {});
         Comment.remove({user_id: user_id}, function(err) {});
         request.session.destroy(function(err) {} );
         response.status(200).send();
@@ -777,14 +880,26 @@ app.post('/likePhoto', function(request, response) {
             return;
         }
         if (photo.like_user_ids.indexOf(user_id) >= 0) {
-            photo.like_num -= 1;
             photo.like_user_ids.remove(user_id);
         } else {
-            photo.like_num += 1;
             photo.like_user_ids.push(user_id);
         }
         photo.save();
-        response.status(200).send();
+        User.findOne({_id:user_id},function (err,user) {
+            if (err) {
+                response.status(400).send(JSON.stringify(err));
+                return;
+            }
+            var likePhotoList = user.photo_liked_list;
+            if (likePhotoList.indexOf(photo_id) >= 0){
+                likePhotoList.remove(photo_id);
+            } else {
+                likePhotoList.push(photo_id);
+            }
+            console.log("likePhotoList: " + likePhotoList);
+            user.save();
+            response.status(200).send();
+        })
     });
 });
 
@@ -803,16 +918,54 @@ app.post('/dislikePhoto', function(request, response) {
             return;
         }
         if (photo.dislike_user_ids.indexOf(user_id) >= 0) {
-            photo.dislike_num -= 1;
             photo.dislike_user_ids.remove(user_id);
         } else {
-            photo.dislike_num += 1;
             photo.dislike_user_ids.push(user_id);
         }
         photo.save();
+        User.findOne({_id:user_id},function (err,user) {
+            if (err) {
+                response.status(400).send(JSON.stringify(err));
+                return;
+            }
+            var dislikePhotoList = user.photo_disliked_list;
+            if (dislikePhotoList.indexOf(photo_id) >= 0){
+                dislikePhotoList.remove(photo_id);
+            } else {
+                dislikePhotoList.push(photo_id);
+            }
+            console.log("dislikePhotoList: " + dislikePhotoList);
+            user.save();
+            response.status(200).send();
+        });
+    });
+});
+
+
+app.post('/recentActivity/', function(request, response){
+    var user_id = request.body.user_id;
+    var activity = request.body.activity;
+    User.findOne({_id: user_id}, function(err, user) {
+        if(err) {
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        if(user === undefined || user === null) {
+            response.status(400).send('user is undefined');
+            return;
+        }
+        user.recentActivity = activity + " at " + new Date().toLocaleString();
+        if(activity === "posted a photo") {
+            user.recently_upload_photo = true;
+        } else {
+            user.recently_upload_photo = false;
+        }
+        user.save();
+        console.log(user.first_name + " " + user.recentActivity);
         response.status(200).send();
     });
 });
+
 
 //2013-12-04T21:12:00.000Z
 function changeDateFormat(dateTime) {
