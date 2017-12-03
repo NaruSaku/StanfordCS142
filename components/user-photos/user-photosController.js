@@ -1,7 +1,7 @@
 'use strict';
 
-cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource','$http', '$rootScope','$location','$mdDialog',
-    function($scope, $routeParams,$resource, $http, $rootScope,$location,$mdDialog) {
+cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource','$http', '$rootScope','$location','$mdDialog','$anchorScroll',
+    function($scope, $routeParams,$resource, $http, $rootScope,$location,$mdDialog,$anchorScroll) {
         /*
          * Since the route is specified as '/photos/:userId' in $routeProvider config the
          * $routeParams  should have the userId property set with the path from the URL.
@@ -23,7 +23,6 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         $scope.userPhotos.checked = obj.checked;
 
         $scope.userPhotos.reload = function () {
-            //console.log("The reload has been called");
             user.get({'userId': userId}, function(user) {
                 $scope.userPhotos.fullName = user.first_name + " " + user.last_name;
                 $scope.main.appContext = "The Photos of " + $scope.userPhotos.fullName;
@@ -58,7 +57,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
             });
         };
 
-        /* This part is used to show only one picture at a time */
+        /** This part is used to show only one picture at a time */
         // $rootScope.$on("ShowSinglePhoto",function (event,data) {
         //     alert("shit2");
         //     $scope.userPhotos.selectIndex(data);
@@ -78,7 +77,8 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
             $http.post("/commentsOfPhoto/" + photo._id, data).then(function successCallback(response) {
                 $http.post('/recentActivity/',JSON.stringify({
                     activity: "added a comment",
-                    user_id: $scope.main.loggedInUser._id
+                    user_id: $scope.main.loggedInUser._id,
+                    photo_name:photo.file_name
                 })).then(function () {
                     console.log("Activity updated");
                     $rootScope.$broadcast('listUpdated');
@@ -178,6 +178,19 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                 console.log(response.data);
             });
         };
+
+        /** doesn't work here*/
+        // $scope.$on("bottom",$scope.gotoBottom);
+        // $scope.gotoBottom = function() {
+        //     console.log("shit");
+        //     setTimeout(function () {
+        //         console.log("shit");
+        //         $location.hash('bottom');
+        //         $anchorScroll();
+        //     },1000)
+        // };
+
+
 
 
 

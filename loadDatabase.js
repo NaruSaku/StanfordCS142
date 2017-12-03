@@ -33,11 +33,12 @@ var User = require('./schema/user.js');
 var Photo = require('./schema/photo.js');
 var SchemaInfo = require('./schema/schemaInfo.js');
 var Comment = require('./schema/comment.js');
+var Activity = require('./schema/activity.js');
 
 var versionString = '1.0';
 
 // We start by removing anything that existing in the collections.
-var removePromises = [User.remove({}), Photo.remove({}), SchemaInfo.remove({})];
+var removePromises = [User.remove({}), Photo.remove({}), SchemaInfo.remove({}),Comment.remove({}),Activity.remove({})];
 
 Promise.all(removePromises).then(function () {
 
@@ -69,6 +70,9 @@ Promise.all(removePromises).then(function () {
             }
         });
     });
+
+
+    Activity.create({id:1,list:[]});
 
 
     var commentModels = cs142models.commentModel();

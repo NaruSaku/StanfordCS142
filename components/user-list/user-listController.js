@@ -1,8 +1,8 @@
 'use strict';
 
-cs142App.controller('UserListController', ['$scope','$resource','$mdDialog',
-    function ($scope,$resource,$mdDialog) {
-        $scope.main.title = 'Users';
+cs142App.controller('UserListController', ['$scope','$resource','$mdDialog','$location',
+    function ($scope,$resource,$mdDialog,$location) {
+        $scope.main.title = 'User List';
         $scope.userList = {};
         $scope.userList.userNames = [];
 
@@ -27,6 +27,10 @@ cs142App.controller('UserListController', ['$scope','$resource','$mdDialog',
                     user:user
                 }
             }).then(function(answer) {}, function() {});
+        };
+
+        $scope.userList.showActivities = function () {
+            $location.path("/activity");
         };
 
         $scope.$on('photoUploaded', $scope.userList.reload);

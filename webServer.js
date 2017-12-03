@@ -40,6 +40,7 @@ var User = require('./schema/user.js');
 var Photo = require('./schema/photo.js');
 var SchemaInfo = require('./schema/schemaInfo.js');
 var Comment = require('./schema/comment.js');
+var Activity = require('./schema/activity.js');
 
 var express = require('express');
 var app = express();
@@ -945,13 +946,10 @@ app.post('/dislikePhoto', function(request, response) {
 app.post('/recentActivity/', function(request, response){
     var user_id = request.body.user_id;
     var activity = request.body.activity;
+    var photo_name = request.body.photo_name;
     User.findOne({_id: user_id}, function(err, user) {
-        if(err) {
+        if(err || !user) {
             response.status(400).send(JSON.stringify(err));
-            return;
-        }
-        if(user === undefined || user === null) {
-            response.status(400).send('user is undefined');
             return;
         }
         user.recentActivity = activity + " at " + new Date().toLocaleString();
@@ -960,9 +958,56 @@ app.post('/recentActivity/', function(request, response){
         } else {
             user.recently_upload_photo = false;
         }
-        user.save();
-        console.log(user.first_name + " " + user.recentActivity);
-        response.status(200).send();
+
+        user.save(function (err) {
+            console.log(user.first_name + " " + user.recentActivity);
+            var photo_show;   // photo to be showed on recent activity
+            var recently_upload_photo; // if there is a photo
+            if (photo_name !== undefined){  // add a comment
+                photo_show = "images/" + photo_name;
+                recently_upload_photo = true;
+            } else if (user.recently_upload_photo){
+                photo_show = user.recent_uploaded_photo;
+                recently_upload_photo = true;
+            } else {
+                photo_show = undefined;
+                recently_upload_photo = false;
+            }
+            Activity.findOne({id:1},function (err,activity) {
+                var new_activity = {
+                    activity:request.body.activity,
+                    date_time:new Date().toLocaleString(),
+                    user_name:user.first_name + " " + user.last_name,
+                    photo_name:photo_show,
+                    recently_upload_photo: recently_upload_photo
+                };
+
+                var list = activity.list;
+                if (list.length === 20){
+                    list.splice(0,1);
+                }
+                list.push(new_activity);
+                activity.save();
+                //console.log(activity.list);
+                response.status(200).send();
+
+            });
+        });
+    });
+});
+
+app.post('/activity',function (request,response) {
+    if (!request.session.user_id) {
+        response.status(401).send("You don't have the authority.");
+        return;
+    }
+    Activity.findOne({id:1},function (err,activity_list) {
+        if(err || !activity_list) {
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        console.log(activity_list.list);
+        response.status(200).send(activity_list.list);
     });
 });
 

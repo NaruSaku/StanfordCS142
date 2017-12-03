@@ -26,8 +26,11 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
         });
 
         $scope.userDetail.showDetail = function(photo){
-            $scope.$emit("emitSinglePhoto",photo);
+            //$scope.$emit("emitSinglePhoto",photo);
+            $rootScope.$broadcast("bottom");
+            //alert("shit");
             $location.path("/photos/" + photo.user_id);
+
         };
 
         $scope.userDetail.hasAuthority = function () {

@@ -25,6 +25,10 @@ cs142App.config(['$routeProvider',
             templateUrl: 'components/comment/commentTemplate.html',
             controller:'commentController'
         }).
+        when('/activity',{
+            templateUrl: 'components/activity/activityTemplate.html',
+            controller:'activityController'
+        }).
         otherwise({
             redirectTo: '/users'
         });

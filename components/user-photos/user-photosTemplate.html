@@ -1,6 +1,8 @@
 <div class="cs142-photos-list">
+    <!--<a ng-click="gotoBottom()">Go to bottom</a>-->
+
     <div ng-show="userPhotos.noPhotos" class="cs142-photos-noPhotos">Let's upload the photos!</div>
-    <div ng-repeat="photo in userPhotos.photos" class="cs142-photos-photo">
+    <div  ng-repeat="photo in userPhotos.photos" id={{photo._id}} class="cs142-photos-photo">
         <div class="cs142-photos-photoDate">
             <div>{{photo.date_time}}</div>
             <!--<button ng-if="userPhotos.hasPhotoAuthority(photo)" ng-click="userPhotos.delete(photo)">Delete</button>-->
@@ -50,10 +52,6 @@
             </div>
 
             <div class="cs142-photos-addComment">
-                <!--<form ng-submit="userPhotos.addComment(photo)">-->
-                    <!--<textarea ng-model="userPhotos.newComment" placeholder="Add comment" class="cs142-photos-text"></textarea>-->
-                    <!--<input type = "submit" value = "Submit" />-->
-                <!--</form>-->
                 <textarea ng-model="userPhotos.newComment" placeholder="Add comment" class="cs142-photos-text"></textarea>
                 <button class="cs142-photos-deleteComment" ng-click="userPhotos.addComment(photo)">
                     Submit
@@ -62,4 +60,5 @@
 
         </div>
     </div>
+    <!--<a id="bottom"></a> You're at the bottom!-->
 </div>

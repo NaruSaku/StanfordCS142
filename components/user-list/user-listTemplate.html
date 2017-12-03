@@ -6,4 +6,8 @@
         <a class="cs142-user-list-bubble1" ng-href="{{'#!/photos/' + user._id}}">{{user.photoLength}}</a>
         <div class="cs142-user-list-bubble2" ng-click="userList.showRecentActivity($event,user)">?</div>
     </div>
+
+    <md-button class="cs142-user-list-button" ng-click="userList.showActivities()">
+        Activities
+    </md-button>
 </div>

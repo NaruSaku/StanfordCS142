@@ -32,7 +32,8 @@
         </div>
         <div class="cs142-detail-thumbnail">
             <div class="cs142-detail-thumbnailWord">The photo with the most comments</div>
-            <img ng-src="/images/{{userDetail.mostCommentsPhoto.file_name}}" class="cs142-detail-thumbnailPhoto">
+            <img ng-src="/images/{{userDetail.mostCommentsPhoto.file_name}}" class="cs142-detail-thumbnailPhoto"
+                 ng-click="userDetail.showDetail(userDetail.mostCommentsPhoto)">
             <div class="cs142-detail-thumbnailDate">Comments Number: {{userDetail.mostCommentsPhoto.comments.length}}</div>
         </div>
     </div>
