@@ -100,15 +100,24 @@ Promise.all(removePromises).then(function () {
                     photo.objectID = photoObj._id;
                     if (photo.comments) {
                         photo.comments.forEach(function (comment) {
-                            photoObj.comments.push({
-                                comment: comment.comment,
+                            Comment.create({
+                                _id: comment._id,
                                 date_time: comment.date_time,
-                                user_id: comment.user.objectID
+                                comment: comment.comment,
+                                user: comment.user,
+                                photo_id: comment.photo_id
+                            }, function (err, commentObj) {
+                                if (err) {
+                                    console.error('Error create comment', err);
+                                } else {
+                                    photoObj.comments.push(commentObj);
+                                    console.log("Adding comment of length %d by user %s to photo %s",
+                                        comment.comment.length,
+                                        comment.user.objectID,
+                                        photo.file_name);
+                                }
                             });
-                            console.log("Adding comment of length %d by user %s to photo %s",
-                                comment.comment.length,
-                                comment.user.objectID,
-                                photo.file_name);
+
                         });
                     }
                     photoObj.save();
@@ -144,24 +153,7 @@ Promise.all(removePromises).then(function () {
         //         }
         //     });
         // });
-    }).then(function () {
-        commentModels.map(function (comment) {
-            console.log(comment.photo_id + "!");
-            return Comment.create({
-                _id: comment._id,
-                date_time: comment.date_time,
-                comment: comment.comment,
-                user: comment.user,
-                photo_id: comment.photo_id
-            }, function (err, commentObj) {
-                if (err) {
-                    console.error('Error create comment', err);
-                } else {
-                    commentObj.save();
-                }
-            });
-        });
-    });
+    })
 
     allPromises.then(function () {
         mongoose.disconnect();
