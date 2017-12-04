@@ -1,7 +1,7 @@
 'use strict';
 
-cs142App.controller('UserListController', ['$scope','$resource','$mdDialog','$location',
-    function ($scope,$resource,$mdDialog,$location) {
+cs142App.controller('UserListController', ['$scope','$resource','$mdDialog','$location','$http',
+    function ($scope,$resource,$mdDialog,$location,$http) {
         $scope.main.title = 'User List';
         $scope.userList = {};
         $scope.userList.userNames = [];
@@ -36,7 +36,19 @@ cs142App.controller('UserListController', ['$scope','$resource','$mdDialog','$lo
             $location.path("/favorite");
         };
 
+        $scope.userList.load = function () {
+            $http.post('/getFavorite',"").then(function (response) {
+                $scope.userList.list = response.data;
+                // choose the first 4
+                $scope.userList.list = $scope.userList.list.slice(0,4);
+                console.log($scope.userList.list);
+            });
+        };
+        $scope.userList.load();
+
+
         $scope.$on('photoUploaded', $scope.userList.reload);
         $scope.$on('photoDeleted', $scope.userList.reload);
         $scope.$on('listUpdated', $scope.userList.reload);
+        $scope.$on('favorite',$scope.userList.load);
     }]);
