@@ -5,6 +5,7 @@
 
 .cs142-user-list-title{
     font-size: 40px;
+    margin: 20px 30px;
 }
 .cs142-user-list-a{
     border-radius: 3px;
@@ -90,4 +91,16 @@ md-sidenav{
     height: 6em;
     width: 6em;
     display: block;
+}
+
+.cs142-userList-photos{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+    top:-10px;
+}
+
+.cs142-userList-photo{
+    margin: 10px 10px;
 }

@@ -12,9 +12,16 @@
     </md-button>
     <div class="cs142-user-favoritePhotos">
         <img ng-src="images/album.jpg" ng-click="userList.showFavorite()" class="cs142-user-img">
-        <md-button class="cs142-user-list-button" ng-click="userList.showFavorite()" style="position:relative;top:-285px">
-            Favorite Photos
-        </md-button>
+        <div style="position:relative;top:-285px">
+            <md-button class="cs142-user-list-button" ng-click="userList.showFavorite()" >
+                Favorite Photos
+            </md-button>
+            <div class="cs142-userList-photos">
+                <div ng-repeat="photo in userList.list">
+                    <img ng-src = "images/{{photo.file_name}}" class="thumbnail cs142-userList-photo">
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>

@@ -24,14 +24,14 @@
     <br>
 
     <div class="cs142-detail-photos">
-        <div class="cs142-detail-thumbnail">
+        <div class="cs142-detail-thumbnail" ng-show="userDetail.mostRecentlyPhoto !== undefined">
             <div class="cs142-detail-thumbnailWord">The most recently uploaded photo</div>
             <img ng-src="/images/{{userDetail.mostRecentlyPhoto.file_name}}" class="cs142-detail-thumbnailPhoto"
                  ng-click="userDetail.showDetail(userDetail.mostRecentlyPhoto)">
             <div class="cs142-detail-thumbnailDate">{{userDetail.mostRecentlyPhoto.date_time}}</div>
-            <a ng-href="{{'#!/photos/' + userDetail.user._id}}#foo">shit</a>
+            <!--<a ng-href="{{'#!/photos/' + userDetail.user._id}}#foo">shit</a>-->
         </div>
-        <div class="cs142-detail-thumbnail">
+        <div class="cs142-detail-thumbnail" ng-show="userDetail.mostCommentsPhoto !== undefined">
             <div class="cs142-detail-thumbnailWord">The photo with the most comments</div>
             <img ng-src="/images/{{userDetail.mostCommentsPhoto.file_name}}" class="cs142-detail-thumbnailPhoto"
                  ng-click="userDetail.showDetail(userDetail.mostCommentsPhoto)">
