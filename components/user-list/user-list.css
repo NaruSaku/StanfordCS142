@@ -1,5 +1,5 @@
 .cs142-user-list-side{
-    padding: 20px;
+    padding: 10px 20px;
     color: wheat;
 }
 
@@ -75,9 +75,19 @@ md-sidenav{
 
 }
 
+.cs142-user-favoritePhotos{
+    width:100%;
+}
+
+.cs142-user-img{
+    width: 100%;
+    position: relative;
+    opacity: 0.5;
+}
+
 .thumbnail{
     margin: 0em;
-    height: 4em;
-    width: 4em;
+    height: 6em;
+    width: 6em;
     display: block;
 }

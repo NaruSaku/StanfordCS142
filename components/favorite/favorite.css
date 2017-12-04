@@ -1,0 +1,9 @@
+.cs142-favorite-photos{
+    display: flex;
+    align-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.cs142-favorite-photo{
+    margin:20px 30px;
+}

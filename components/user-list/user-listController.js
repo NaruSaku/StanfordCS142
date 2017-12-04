@@ -32,6 +32,9 @@ cs142App.controller('UserListController', ['$scope','$resource','$mdDialog','$lo
         $scope.userList.showActivities = function () {
             $location.path("/activity");
         };
+        $scope.userList.showFavorite = function () {
+            $location.path("/favorite");
+        };
 
         $scope.$on('photoUploaded', $scope.userList.reload);
         $scope.$on('photoDeleted', $scope.userList.reload);

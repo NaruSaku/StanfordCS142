@@ -1,0 +1,6 @@
+<div class="cs142-favorite-photos">
+    <div ng-repeat = "photo in favorite.list">
+        <img ng-src = "images/{{photo.file_name}}" class="thumbnail cs142-favorite-photo"
+        ng-click="favorite.showDetail(photo)">
+    </div>
+</div>

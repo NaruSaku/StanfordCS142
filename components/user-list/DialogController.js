@@ -16,8 +16,12 @@ cs142App.controller('DialogController', ['$scope', '$rootScope', '$mdDialog','us
             $mdDialog.hide(answer);
         };
 
-        $scope.dialog.link_to = function () {
-            $location.path("/users/" + $scope.dialog.user._id);
+        $scope.dialog.link_to = function (parameter) {
+            if (parameter !== "all"){
+                $location.path("/users/" + $scope.dialog.user._id);
+            } else {
+                $location.path("/activity");
+            }
             $scope.dialog.cancel();
         }
     }]);

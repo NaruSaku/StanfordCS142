@@ -1,4 +1,4 @@
-<div class="cs142-photos-list">
+<div class="cs142-photos-list" ng-cloak>
     <!--<a ng-click="gotoBottom()">Go to bottom</a>-->
 
     <div ng-show="userPhotos.noPhotos" class="cs142-photos-noPhotos">Let's upload the photos!</div>
@@ -20,6 +20,10 @@
             <div class="cs142-photos-like">
                 <img ng-src="/images/like3.jpg" ng-click = "userPhotos.like(photo)">
                 {{photo.like_user_ids.length}}
+            </div>
+            <div class="cs142-photos-like">
+                <img ng-if="!photo.favorite"ng-src="/images/greyheart.png" ng-click = "userPhotos.favorite(photo)">
+                <img ng-if="photo.favorite"ng-src="/images/heart.png" ng-click = "userPhotos.favorite(photo)">
             </div>
             <div class="cs142-photos-like">
                 <img ng-src="/images/dislike2.png" ng-click = "userPhotos.dislike(photo)">
@@ -52,6 +56,10 @@
             </div>
 
             <div class="cs142-photos-addComment">
+                <!--<form ng-submit="userPhotos.addComment(photo)">-->
+                    <!--<textarea ng-model="userPhotos.newComment" placeholder="Add comment" class="cs142-photos-text"></textarea>-->
+                    <!--<input type = "submit" value = "Submit" />-->
+                <!--</form>-->
                 <textarea ng-model="userPhotos.newComment" placeholder="Add comment" class="cs142-photos-text"></textarea>
                 <button class="cs142-photos-deleteComment" ng-click="userPhotos.addComment(photo)">
                     Submit
@@ -60,5 +68,6 @@
 
         </div>
     </div>
+    <div id="foo"></div>
     <!--<a id="bottom"></a> You're at the bottom!-->
 </div>

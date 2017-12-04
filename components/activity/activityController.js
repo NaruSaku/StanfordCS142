@@ -7,6 +7,4 @@ cs142App.controller('activityController', ['$scope','$resource','$http',
         $http.post('/activity',"").then(function (response) {
             $scope.activity.activity_list = response.data;
         });
-
-
     }]);

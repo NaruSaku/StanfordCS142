@@ -20,7 +20,8 @@ var userSchema = new mongoose.Schema({
     recently_upload_photo: {type:Boolean,default:false},
     recent_uploaded_photo:String,
     photo_liked_list:{type:[String],default:[]},
-    photo_disliked_list:{type:[String],default:[]}
+    photo_disliked_list:{type:[String],default:[]},
+    favorite_photos:{type:[String],default:[]}
 });
 
 // the schema is useless so far

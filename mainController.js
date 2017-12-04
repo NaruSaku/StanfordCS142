@@ -29,20 +29,25 @@ cs142App.config(['$routeProvider',
             templateUrl: 'components/activity/activityTemplate.html',
             controller:'activityController'
         }).
+        when('/favorite',{
+            templateUrl: 'components/favorite/favoriteTemplate.html',
+            controller:'favoriteController'
+        }).
         otherwise({
             redirectTo: '/users'
         });
     }]);
 
-cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$rootScope','$location','$http','$mdDialog',
-    function ($scope, $mdSidenav,$resource,$rootScope,$location,$http,$mdDialog) {
+cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$rootScope','$location','$http','$mdDialog','$anchorScroll',
+    function ($scope, $mdSidenav,$resource,$rootScope,$location,$http,$mdDialog,$anchorScroll) {
         $scope.main = {};
         $scope.main.title = 'CS142 Photo Sharing Website';
         $scope.main.authorName = "Ji Yu";
         $scope.main.loggedInUser = undefined;
         $scope.main.selectedPhotoFile = undefined;
 
-        $rootScope.$on("$routeChangeStart", function(event, next, current) {
+        $rootScope.$on("$routeChangeSuccess", function(event, next, current) {
+            if($location.hash()) $anchorScroll();
             if ($scope.main.loggedInUser === undefined) {
                 // no logged user, redirect to /login-register unless already there
                 // This part is used to hold the session

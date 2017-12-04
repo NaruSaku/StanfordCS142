@@ -15,7 +15,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         $scope.userPhotos.noPhotos = false;
 
 
-        var user = $resource('/user/:userId');
+        var User = $resource('/user/:userId');
         var userPhotos = $resource('/photosOfUser/:userId');
 
         //
@@ -23,38 +23,46 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         $scope.userPhotos.checked = obj.checked;
 
         $scope.userPhotos.reload = function () {
-            user.get({'userId': userId}, function(user) {
+            User.get({'userId': userId}, function(user) {
                 $scope.userPhotos.fullName = user.first_name + " " + user.last_name;
                 $scope.main.appContext = "The Photos of " + $scope.userPhotos.fullName;
-            });
+                userPhotos.query({'userId': userId},function (photos) {
+                    photos = photos.sort(function (photo1, photo2) {
+                        if(photo1.like_user_ids.length > photo2.like_user_ids.length) {
+                            return -1;
+                        }
+                        if(photo1.like_user_ids.length < photo2.like_user_ids.length) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    photos.forEach(function (photo) {
+                        if (user.favorite_photos.indexOf(photo._id) >= 0){
+                            photo.favorite = true;
+                        } else {
+                            photo.favorite = false;
+                        }
+                    });
 
-            userPhotos.query({'userId': userId},function (photos) {
-                photos = photos.sort(function (photo1, photo2) {
-                    if(photo1.like_user_ids.length > photo2.like_user_ids.length) {
-                        return -1;
+                    $scope.userPhotos.photos = photos;
+                    $scope.userPhotos.photos2= photos;
+                    if (photos.length === 0){
+                        $scope.userPhotos.noPhotos = true;
                     }
-                    if(photo1.like_user_ids.length < photo2.like_user_ids.length) {
-                        return 1;
+                    if ($scope.userPhotos.checked){
+                        $scope.userPhotos.photos = $scope.userPhotos.photos2.slice($scope.userPhotos.index,$scope.userPhotos.index + 1);
                     }
-                    return 0;
-                });
-
-                $scope.userPhotos.photos = photos;
-                $scope.userPhotos.photos2= photos;
-                if (photos.length === 0){
-                    $scope.userPhotos.noPhotos = true;
-                }
-                if ($scope.userPhotos.checked){
-                    $scope.userPhotos.photos = $scope.userPhotos.photos2.slice($scope.userPhotos.index,$scope.userPhotos.index + 1);
-                }
-                $scope.userPhotos.photos.forEach(function (photo) {
-                    $http.post('/photoView', JSON.stringify({photo_id:photo._id})).then(function successCallback(response) {
-                        $rootScope.$broadcast("photoViewed");
-                    }, function errorCallback(response) {
-                        console.log(response.data);
+                    $scope.userPhotos.photos.forEach(function (photo) {
+                        $http.post('/photoView', JSON.stringify({photo_id:photo._id})).then(function successCallback(response) {
+                            $rootScope.$broadcast("photoViewed");
+                        }, function errorCallback(response) {
+                            console.log(response.data);
+                        });
                     });
                 });
             });
+
+
         };
 
         /** This part is used to show only one picture at a time */
@@ -178,6 +186,16 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                 console.log(response.data);
             });
         };
+        $scope.userPhotos.favorite = function(photo) {
+            var photo_id = photo._id;
+            photo.favorite = !photo.favorite;
+            $http.post('/favorite', JSON.stringify({photo_id:photo_id})).then(function successCallback(response) {
+                $rootScope.$broadcast("favorite");
+                console.log(response.data.length);
+            }, function errorCallback(response) {
+                console.log(response.data);
+            });
+        };
 
         /** doesn't work here*/
         // $scope.$on("bottom",$scope.gotoBottom);
@@ -189,6 +207,20 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         //         $anchorScroll();
         //     },1000)
         // };
+
+        // $rootScope.$on('$routeChangeStart', function(newRoute, oldRoute) {
+        //     var id = $routeParams.scrollTo;
+        //     //$location.hash(id);
+        //     $scope.scrollTo(id);
+        //     $anchorScroll();
+        //     console.log(id);
+        // });
+
+        $scope.scrollTo = function(id) {
+            //alert("shit");
+            $location.hash(id);
+            $anchorScroll();
+        };
 
 
 

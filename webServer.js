@@ -354,7 +354,7 @@ app.get('/comment/:text', function (request, response) {
             console.log(send_comments[index]._id);
         }
         async.each(send_comments,function (send_comment,comment_callback) {
-            Photo.findOne({photo_id:send_comment.photo_id},function (err,photo) {
+            Photo.findOne({_id:send_comment.photo_id},function (err,photo) {
                 if (err) {
                     response.status(400).send(JSON.stringify(err));
                     return;
@@ -1010,6 +1010,54 @@ app.post('/activity',function (request,response) {
         response.status(200).send(activity_list.list);
     });
 });
+
+app.post('/getFavorite',function (request,response) {
+    if (!request.session.user_id) {
+        response.status(401).send("You don't have the authority.");
+        return;
+    }
+    User.findOne({_id:request.session.user_id},function (err,user) {
+        if(err || !user) {
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        // var list = JSON.parse(JSON.stringify(user.favorite_photos));
+        var result = [];
+        async.each(user.favorite_photos,function (photo_id,done_callback) {
+            Photo.findOne({_id:photo_id},function (err,photo) {
+                console.log(photo);
+                result.push(photo);
+                done_callback();
+            })
+        },function (err) {
+            console.log(result);
+            response.status(200).send(result);
+        });
+    });
+});
+
+app.post('/favorite',function (request,response) {
+    if (!request.session.user_id) {
+        response.status(401).send("You don't have the authority.");
+        return;
+    }
+    User.findOne({_id:request.session.user_id},function (err,user) {
+        if(err || !user) {
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        var photo_id = request.body.photo_id;
+        var list = user.favorite_photos;
+        if (list.indexOf(photo_id) >= 0){
+            list.remove(photo_id);
+        } else {
+            list.push(photo_id);
+        }
+        user.save();
+        response.status(200).send({length:list.length});
+    });
+});
+
 
 
 //2013-12-04T21:12:00.000Z

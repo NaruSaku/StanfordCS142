@@ -7,7 +7,7 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
          * $routeParams  should have the userId property set with the path from the URL.
          */
         var userId = $routeParams.userId;
-        console.log('UserDetail of ', userId);
+        //console.log('UserDetail of ', userId);
         var userData = $resource('/user/:userId');
         var userPhotoData = $resource('/userPhoto/:userId');
 

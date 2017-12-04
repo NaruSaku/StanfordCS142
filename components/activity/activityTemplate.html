@@ -1,19 +1,16 @@
 <div layout="column" ng-cloak>
-        <div class="md-toolbar-tools" class="md-accent">
-            <h3>
-                <span>Activities</span>
-            </h3>
-        </div>
+    <div class="md-toolbar-tools">
+        <span class ="cs142-activity-title">Activities</span>
+    </div>
     <md-content flex>
         <md-list>
-            <md-list-item class="md-3-line" ng-repeat="activity in activity.activity_list">
-                <div class="md-list-item-text">
+            <md-list-item class="md-2-line" ng-repeat="activity in activity.activity_list">
+                <div class = "cs142-activity-activity">
                     <div>
-                        <h3>{{activity.user_name}}</h3>
-                        <h4>{{activity.activity}}</h4>
+                        <h3>{{activity.user_name}} {{activity.activity}}</h3>
                         <p>at {{activity.date_time}}</p>
                     </div>
-                    <div ng-show = "activity.recently_upload_photo">
+                    <div ng-show = "activity.recently_upload_photo" class="cs142-activity-photo">
                         <img ng-src="{{activity.photo_name}}" class="thumbnail">
                     </div>
 
