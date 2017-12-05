@@ -345,21 +345,20 @@ app.get('/comment/:text', function (request, response) {
             response.status(400).send(JSON.stringify(err));
             return;
         }
-        send_comments = comments;
-        for (var index = 0; index < send_comments.length; index++){
-            console.log(send_comments[index].photo_id);
-            console.log(send_comments[index].comment);
-            console.log(send_comments[index].date_time);
-            console.log(send_comments[index].user_id);
-            console.log(send_comments[index]._id);
-        }
+        send_comments = JSON.parse(JSON.stringify(comments));
+        // for (var index = 0; index < send_comments.length; index++){
+        //     console.log(send_comments[index].photo_id);
+        //     console.log(send_comments[index].comment);
+        //     console.log(send_comments[index].date_time);
+        //     console.log(send_comments[index].user_id);
+        // }
         async.each(send_comments,function (send_comment,comment_callback) {
             Photo.findOne({_id:send_comment.photo_id},function (err,photo) {
                 if (err) {
                     response.status(400).send(JSON.stringify(err));
                     return;
                 }
-                //console.log(photo.file_name);
+                console.log(photo); //null
                 send_photos.push(photo);
                 comment_callback();
             })
@@ -881,6 +880,7 @@ app.post('/likePhoto', function(request, response) {
             return;
         }
         if (photo.like_user_ids.indexOf(user_id) >= 0) {
+            //response.status(200).send({liked:false});
             photo.like_user_ids.remove(user_id);
         } else {
             photo.like_user_ids.push(user_id);
@@ -899,7 +899,7 @@ app.post('/likePhoto', function(request, response) {
             }
             console.log("likePhotoList: " + likePhotoList);
             user.save();
-            response.status(200).send();
+            response.status(200).send({liked:true});
         })
     });
 });
