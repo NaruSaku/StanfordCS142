@@ -174,6 +174,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
             var photo_id = photo._id;
             $http.post('/likePhoto', JSON.stringify({photo_id:photo_id})).then(function successCallback(response) {
                 $rootScope.$broadcast("photoLiked");
+                console.log(response.data.liked);
             }, function errorCallback(response) {
                 console.log(response.data);
             });

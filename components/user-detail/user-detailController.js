@@ -17,6 +17,7 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
             $scope.userDetail.user = userData;
             $scope.userDetail.fullName = userData.first_name + " " + userData.last_name;
             $scope.main.appContext = "Information of " + $scope.userDetail.fullName;
+            $scope.main.title = $scope.userDetail.fullName;
 
         });
 

@@ -1,5 +1,5 @@
 <div ng-repeat="comment in comments.commentList">
-    {{comment.comment}}
+    <div class="cs142-comment-comment">{{comment.comment}}</div>
     {{comments.photos[$index].file_name}}
     <img ng-src="/images/{{comments.photos[$index].file_name}}">
 </div>
