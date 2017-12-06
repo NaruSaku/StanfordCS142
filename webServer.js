@@ -718,6 +718,10 @@ app.post('/deletePhoto', function(request, response) {
 });
 
 app.post('/deleteComment', function(request, response) {
+    if (!request.session.user_id) {
+        response.status(401).send("You don't have the authority.");
+        return;
+    }
     var comment_id = request.body.comment_id;
     var photo_id = request.body.photo_id;
 
@@ -868,6 +872,10 @@ app.post('/photoView', function(request, response) {
 /**This part has been revised to meet the instructions
  * The original part can been seen on Github */
 app.post('/likePhoto', function(request, response) {
+    if (!request.session.user_id) {
+        response.status(401).send("You don't have the authority.");
+        return;
+    }
     var photo_id = request.body.photo_id;
     var user_id = request.session.user_id;
     var likeOrDislike = request.body.like;
@@ -946,6 +954,10 @@ app.post('/dislikePhoto', function(request, response) {
 
 
 app.post('/recentActivity/', function(request, response){
+    if (!request.session.user_id) {
+        response.status(401).send("You don't have the authority.");
+        return;
+    }
     var user_id = request.body.user_id;
     var activity = request.body.activity;
     var photo_name = request.body.photo_name;
@@ -1029,6 +1041,7 @@ app.post('/activity',function (request,response) {
             activity_list.list = activity_list.list.slice(length - 20,length);
         }
         //console.log(activity_list.list + "!");
+        activity_list.list.reverse();
         response.status(200).send(activity_list.list);
     });
 });
