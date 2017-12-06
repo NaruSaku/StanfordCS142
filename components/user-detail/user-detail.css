@@ -25,6 +25,10 @@
 }
 
 .cs142-detail-thumbnail{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     width: 200px;
     height: auto;
     font-size: 10px;
@@ -34,15 +38,20 @@
 }
 
 .cs142-detail-thumbnailPhoto{
-    width: 100%;
+    margin: 1em;
+    height: 12em;
+    width: 12em;
+    display: block;
 }
 
 .cs142-detail-thumbnailDate{
     width: 100%;
+    font-weight: 800;
 }
 
 .cs142-detail-thumbnailWord{
     width: 100%;
+    font-weight: 800;
 }
 
 .cs142-detail-photos{

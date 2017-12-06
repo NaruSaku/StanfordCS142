@@ -23,7 +23,9 @@ cs142App.controller('UserListController', ['$scope','$resource','$mdDialog','$lo
                 parent: angular.element(document.body),
                 targetEvent: ev,
                 clickOutsideToClose:true,
+                //scope:$scope,
                 locals:{
+                    loggedInUser:$scope.main.loggedInUser,
                     user:user
                 }
             }).then(function(answer) {}, function() {});

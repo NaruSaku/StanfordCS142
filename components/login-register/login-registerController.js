@@ -51,7 +51,9 @@ cs142App.controller('LoginRegisterController', ['$scope', '$resource', '$http', 
                     $scope.main.loggedInUser = response.data;
                     $http.post('/recentActivity/',JSON.stringify({
                         activity: "logged in",
-                        user_id: $scope.main.loggedInUser._id
+                        user_id: $scope.main.loggedInUser._id,
+                        control:false,
+                        visibleList:[]
                     })).then(function () {
                         $rootScope.$broadcast('listUpdated');
                     });
@@ -97,6 +99,16 @@ cs142App.controller('LoginRegisterController', ['$scope', '$resource', '$http', 
                 })).then(function () {
                     $rootScope.$broadcast('listUpdated');
                 });
+
+                $http.post('/recentActivity/',JSON.stringify({
+                    activity: "logged in",
+                    user_id: $scope.main.loggedInUser._id,
+                    control:false,
+                    visibleList:[]
+                })).then(function () {
+                    $rootScope.$broadcast('listUpdated');
+                });
+
                 $rootScope.$broadcast('loggedIn');
                 $location.path("/users/" + $scope.main.loggedInUser._id);
                 $scope.register.reset();

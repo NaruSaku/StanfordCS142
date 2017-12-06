@@ -1,9 +1,15 @@
 'use strict';
 
-cs142App.controller('DialogController', ['$scope', '$rootScope', '$mdDialog','user','$location',
-    function($scope, $rootScope, $mdDialog,user,$location) {
+cs142App.controller('DialogController', ['$scope', '$rootScope', '$mdDialog','user','$location','loggedInUser',
+    function($scope, $rootScope, $mdDialog,user,$location,loggedInUser) {
         $scope.dialog = {};
         $scope.dialog.user = user;
+        $scope.dialog.show = true;
+        //console.log(user.recentActivity);
+        var list = user.recentActivity.visible_list;
+        if (list.length !== 0 && list.indexOf(loggedInUser._id) < 0){
+            $scope.dialog.show = false;
+        }
         $scope.dialog.hide = function() {
             $mdDialog.hide();
         };

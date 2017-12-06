@@ -59,6 +59,6 @@ cs142App.controller('visibilityControlController', ['$scope', '$rootScope', '$md
                 }
             });
             $scope.visibility.visibleList.push($scope.main.loggedInUser._id);
-            $mdDialog.hide({data:$scope.visibility.visibleList,passed:true});
+            $mdDialog.hide($scope.visibility.visibleList);
         };
     }]);

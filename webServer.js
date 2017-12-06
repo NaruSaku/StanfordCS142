@@ -145,7 +145,7 @@ app.get('/user/list', function (request, response) {
         response.status(401).send("You don't have the authority.");
         return;
     }
-    User.find({},function (err,userList) {
+    User.find({},['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list'],function (err,userList) {
         if (err){
             response.status(400).send(JSON.stringify(err));
             return ;
@@ -196,7 +196,8 @@ app.get('/user/:id', function (request, response) {
     //request.session.photo_user_id = user_id;
     request.session.photo_user_id = "";
     request.session.user_detail_id = id;
-    User.findOne({'_id':id},function (err,userDetail) {
+    User.findOne({'_id':id},
+        ['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list'],function (err,userDetail) {
         if (err){
             response.status(400).send(JSON.stringify(err));
             return;
@@ -205,7 +206,6 @@ app.get('/user/:id', function (request, response) {
             response.status(400).send('Not found');
             return;
         }
-        //request.session.user_id = userDetail._id;
         response.status(200).send(userDetail);
     })
 });
@@ -454,7 +454,7 @@ app.post('/admin/login', function(request, response) {
             }
             var photo_user_id = request.session.photo_user_id;
             var user_detail_id = request.session.user_detail_id;
-            response.status(200).send({user:user,photo_user_id:photo_user_id,user_detail_id:user_detail_id});
+            response.status(200).send({user:{_id:user._id},photo_user_id:photo_user_id,user_detail_id:user_detail_id});
         });
         return;
     }
@@ -468,7 +468,7 @@ app.post('/admin/login', function(request, response) {
                 request.session.user_id = user._id;
                 request.session.user_detail_id = user._id;
                 //session.user_id = user._id;
-                response.status(200).send(user);
+                response.status(200).send({_id:user._id});
             } else {
                 response.status(400).send("Password is not correct!");
             }
@@ -549,8 +549,9 @@ app.post('/photos/new', function(request, response) {
         var filename = 'U' +  String(timestamp) + request.file.originalname;
 
         var visibleList = request.body.visibleList.split(',');
+        //console.log("visibleList:" + visibleList);
         var control = (request.body.control === "true");
-        console.log("control in web server:" + control);
+        //console.log("control in web server:" + control);
 
         fs.writeFile("./images/" + filename, request.file.buffer, function (err) {
             // XXX - Once you have the file written into your images directory under the name
@@ -574,7 +575,6 @@ app.post('/photos/new', function(request, response) {
                     console.log(err);
                     response.status(400).send("Error uploading photo");
                 }
-                console.log("shit");
                 response.status(200).send(createdPhoto);
             });
             User.findOne({_id:request.session.user_id},function (err,user) {
@@ -865,9 +865,14 @@ app.post('/photoView', function(request, response) {
     });
 });
 
+/**This part has been revised to meet the instructions
+ * The original part can been seen on Github */
 app.post('/likePhoto', function(request, response) {
     var photo_id = request.body.photo_id;
     var user_id = request.session.user_id;
+    var likeOrDislike = request.body.like;
+    console.log("likeOrDislike:" + likeOrDislike);
+
 
     Photo.findOne({_id: photo_id}, function(err, photo) {
         if (err) {
@@ -875,15 +880,10 @@ app.post('/likePhoto', function(request, response) {
             return;
         }
         photo.view_times--;
-        if (photo.dislike_user_ids.indexOf(user_id) >= 0){
-            response.status(400).send("You have already disliked this photo.");
-            return;
-        }
-        if (photo.like_user_ids.indexOf(user_id) >= 0) {
-            //response.status(200).send({liked:false});
-            photo.like_user_ids.remove(user_id);
-        } else {
+        if (likeOrDislike && photo.like_user_ids.indexOf(user_id) < 0){   // like
             photo.like_user_ids.push(user_id);
+        } else if (likeOrDislike === false && photo.like_user_ids.indexOf(user_id) >= 0){              // dislike
+            photo.like_user_ids.remove(user_id);
         }
         photo.save();
         User.findOne({_id:user_id},function (err,user) {
@@ -892,18 +892,20 @@ app.post('/likePhoto', function(request, response) {
                 return;
             }
             var likePhotoList = user.photo_liked_list;
-            if (likePhotoList.indexOf(photo_id) >= 0){
+            if (likeOrDislike === false && likePhotoList.indexOf(photo_id) >= 0){
                 likePhotoList.remove(photo_id);
-            } else {
+            } else if (likeOrDislike === true && likePhotoList.indexOf(photo_id) < 0){
                 likePhotoList.push(photo_id);
             }
-            console.log("likePhotoList: " + likePhotoList);
+            //console.log("likePhotoList: " + likePhotoList);
             user.save();
-            response.status(200).send({liked:true});
+            var bool = likePhotoList.indexOf(photo_id) >= 0;
+            response.status(200).send({liked:bool});
         })
     });
 });
 
+/**This part is not being used currently*/
 app.post('/dislikePhoto', function(request, response) {
     var photo_id = request.body.photo_id;
     var user_id = request.session.user_id;
@@ -947,43 +949,55 @@ app.post('/recentActivity/', function(request, response){
     var user_id = request.body.user_id;
     var activity = request.body.activity;
     var photo_name = request.body.photo_name;
+    // if control is true, visible_to_all is false;
+    var visible_to_all = !(request.body.control === true);
+    //console.log("visible_to_all:" + visible_to_all);
+    var visible_list = request.body.visibleList;
+    //console.log("visible_List:" + visible_list);
+
     User.findOne({_id: user_id}, function(err, user) {
         if(err || !user) {
             response.status(400).send(JSON.stringify(err));
             return;
         }
-        user.recentActivity = activity + " at " + new Date().toLocaleString();
+        var photo_show;   // photo name to be showed on recent activity
+        var recently_upload_photo; // if there is a photo
+
         if(activity === "posted a photo") {
             user.recently_upload_photo = true;
         } else {
             user.recently_upload_photo = false;
         }
 
-        user.save(function (err) {
-            console.log(user.first_name + " " + user.recentActivity);
-            var photo_show;   // photo to be showed on recent activity
-            var recently_upload_photo; // if there is a photo
-            if (photo_name !== undefined){  // add a comment
-                photo_show = "images/" + photo_name;
-                recently_upload_photo = true;
-            } else if (user.recently_upload_photo){
-                photo_show = user.recent_uploaded_photo;
-                recently_upload_photo = true;
-            } else {
-                photo_show = undefined;
-                recently_upload_photo = false;
-            }
-            Activity.findOne({id:1},function (err,activity) {
-                var new_activity = {
-                    activity:request.body.activity,
-                    date_time:new Date().toLocaleString(),
-                    user_name:user.first_name + " " + user.last_name,
-                    photo_name:photo_show,
-                    recently_upload_photo: recently_upload_photo
-                };
+        if (photo_name !== undefined){  // add a comment
+            photo_show = "images/" + photo_name;
+            recently_upload_photo = true;
+        } else if (user.recently_upload_photo){
+            photo_show = user.recent_uploaded_photo;
+            recently_upload_photo = true;
+        } else {
+            photo_show = undefined;
+            recently_upload_photo = false;
+        }
 
+        var new_activity = {
+            activity:activity + " at " + new Date().toLocaleString(),
+            date_time:new Date().toLocaleString(),
+            user_name:user.first_name + " " + user.last_name,
+            photo_name:photo_show,
+            recently_upload_photo: recently_upload_photo,
+            visible_to_all:visible_to_all,
+            visible_list:visible_list   // if[]
+        };
+
+        user.recentActivity = new_activity;
+
+
+        user.save(function (err) {
+            console.log(user.first_name + " " + user.recentActivity.activity);
+            Activity.findOne({id:1},function (err,activity) {
                 var list = activity.list;
-                if (list.length === 20){
+                if (list.length === 200){
                     list.splice(0,1);
                 }
                 list.push(new_activity);
@@ -1006,7 +1020,15 @@ app.post('/activity',function (request,response) {
             response.status(400).send(JSON.stringify(err));
             return;
         }
-        console.log(activity_list.list);
+        activity_list.list = activity_list.list.filter(function (activity) {
+            //console.log("activity.visible_list" + activity.visible_list);
+            return (activity.visible_to_all || activity.visible_list.indexOf(request.session.user_id) >= 0)
+        });
+        var length = activity_list.list.length;
+        if (length > 20){
+            activity_list.list = activity_list.list.slice(length - 20,length);
+        }
+        //console.log(activity_list.list + "!");
         response.status(200).send(activity_list.list);
     });
 });

@@ -30,19 +30,34 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                     photos = photos.sort(function (photo1, photo2) {
                         if(photo1.like_user_ids.length > photo2.like_user_ids.length) {
                             return -1;
-                        }
-                        if(photo1.like_user_ids.length < photo2.like_user_ids.length) {
+                        } else if(photo1.like_user_ids.length < photo2.like_user_ids.length) {
                             return 1;
-                        }
-                        return 0;
-                    });
-                    photos.forEach(function (photo) {
-                        if (user.favorite_photos.indexOf(photo._id) >= 0){
-                            photo.favorite = true;
                         } else {
-                            photo.favorite = false;
+                            if (string2DateStamp(photo1.date_time) > string2DateStamp(photo2.date_time)){
+                                return -1;
+                            } else if (string2DateStamp(photo1.date_time) < string2DateStamp(photo2.date_time)){
+                                return 1;
+                            }
+                            return 0;
                         }
                     });
+
+                    User.get({'userId':$scope.main.loggedInUser._id},function (logged_user) {
+                        photos.forEach(function (photo) {
+                            if (logged_user.favorite_photos.indexOf(photo._id) >= 0){
+                                photo.favorite = true;
+                            } else {
+                                photo.favorite = false;
+                            }
+
+                            if (logged_user.photo_liked_list.indexOf(photo._id) >= 0){
+                                photo.liked = true;
+                            } else {
+                                photo.liked = false;
+                            }
+                        });
+                    });
+
 
                     $scope.userPhotos.photos = photos;
                     $scope.userPhotos.photos2= photos;
@@ -63,6 +78,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
             });
 
 
+
         };
 
         /** This part is used to show only one picture at a time */
@@ -78,6 +94,9 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         //     $scope.userPhotos.reload();
         // };
 
+        // control: {type: Boolean, default: false},
+        // visibleList: {type: [mongoose.Schema.Types.ObjectId], default: []}
+
         $scope.userPhotos.reload();
 
         $scope.userPhotos.addComment = function(photo) {
@@ -86,7 +105,9 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                 $http.post('/recentActivity/',JSON.stringify({
                     activity: "added a comment",
                     user_id: $scope.main.loggedInUser._id,
-                    photo_name:photo.file_name
+                    photo_name:photo.file_name,
+                    control:photo.control,
+                    visibleList:photo.visibleList
                 })).then(function () {
                     console.log("Activity updated");
                     $rootScope.$broadcast('listUpdated');
@@ -170,23 +191,34 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         };
 
         /* This part is for the like and dislike */
-        $scope.userPhotos.like = function(photo) {
+        $scope.userPhotos.like = function(photo,likeOrDislike) {
             var photo_id = photo._id;
-            $http.post('/likePhoto', JSON.stringify({photo_id:photo_id})).then(function successCallback(response) {
+            $http.post('/likePhoto', JSON.stringify({photo_id:photo_id,like:likeOrDislike})).then(function successCallback(response) {
                 $rootScope.$broadcast("photoLiked");
                 console.log(response.data.liked);
             }, function errorCallback(response) {
                 console.log(response.data);
             });
         };
+
+        /**This part is not being used currently*/
         $scope.userPhotos.dislike = function(photo) {
             var photo_id = photo._id;
             $http.post('/dislikePhoto', JSON.stringify({photo_id:photo_id})).then(function successCallback(response) {
-                $rootScope.$broadcast("photoDisLiked");
+                $rootScope.$broadcast("photoLiked");
+                console.log(response.data.liked);
             }, function errorCallback(response) {
                 console.log(response.data);
             });
         };
+        // $scope.userPhotos.dislike = function(photo) {
+        //     var photo_id = photo._id;
+        //     $http.post('/dislikePhoto', JSON.stringify({photo_id:photo_id})).then(function successCallback(response) {
+        //         $rootScope.$broadcast("photoDisLiked");
+        //     }, function errorCallback(response) {
+        //         console.log(response.data);
+        //     });
+        // };
         $scope.userPhotos.favorite = function(photo) {
             var photo_id = photo._id;
             photo.favorite = !photo.favorite;

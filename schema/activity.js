@@ -11,7 +11,9 @@ var activity = new mongoose.Schema({
     date_time:String,
     user_name:String,
     photo_name:String,
-    recently_upload_photo: {type:Boolean,default:false}
+    recently_upload_photo: {type:Boolean,default:false},
+    visible_list: {type: [mongoose.Schema.Types.ObjectId], default: []},
+    visible_to_all:{type:Boolean,default:true}
 });
 
 var activity_list = new mongoose.Schema({

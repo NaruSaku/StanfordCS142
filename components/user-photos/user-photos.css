@@ -99,7 +99,17 @@
 }
 .cs142-photos-like img{
     width: 40px;
-    height:40px
+    height:40px;
+    cursor: pointer;
+}
+
+.cs142-photos-liked{
+    font-weight: 800;
+    color: brown;
+}
+
+.cs142-photos-disliked{
+    font-weight: 800;
 }
 
 img.cs142-photos-image {

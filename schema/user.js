@@ -5,6 +5,25 @@
 /* jshint node: true */
 
 var mongoose = require('mongoose');
+var activity = new mongoose.Schema({
+    activity:String,
+    date_time:String,
+    user_name:String,
+    photo_name:String,
+    recently_upload_photo: {type:Boolean,default:false},
+    visible_list: {type: [mongoose.Schema.Types.ObjectId], default: []},
+    visible_to_all:{type:Boolean,default:true}
+});
+
+var new_activity = {
+    activity:"registered as a user",
+    date_time:new Date().toLocaleString(),
+    user_name:"",
+    photo_name:null,
+    recently_upload_photo: false,
+    visible_to_all:true,
+    visible_list:[]   // if[]
+};
 
 // create a schema
 var userSchema = new mongoose.Schema({
@@ -16,7 +35,7 @@ var userSchema = new mongoose.Schema({
     login_name: String,
     password_digest: String,
     salt: String,
-    recentActivity: {type:String,default:"registered as a user"},
+    recentActivity: {type:activity,default:new_activity},
     recently_upload_photo: {type:Boolean,default:false},
     recent_uploaded_photo:String,
     photo_liked_list:{type:[String],default:[]},

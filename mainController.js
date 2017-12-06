@@ -68,6 +68,10 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                 if (next.templateUrl !== "components/login-register/login-registerTemplate.html") {
                     $location.path("/login-register");
                 }
+            } else {
+                if (next.templateUrl === "components/login-register/login-registerTemplate.html") {
+                    $location.path("/users/" + $scope.main.loggedInUser._id);
+                }
             }
                 // if (next.templateUrl === "components/login-register/login-registerTemplate.html") {
                 //     $location.path(current.templateUrl);
@@ -89,11 +93,9 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                 controller: 'visibilityControlController',
                 scope: child,
                 templateUrl: 'components/visibility-control/visibility-controlTemplate.html'
-            }).then(function(result) {
-                if (result.passed){
-                    $scope.main.uploadPhoto(true, result.data);
-                }
-            }, function(result) {
+            }).then(function(result) { // everybody can see
+                $scope.main.uploadPhoto(true, result);
+            }, function(result) {   // only people on the list can see
                 if (result){
                     var visibleList = [];
                     $scope.main.uploadPhoto(false, visibleList);
@@ -123,15 +125,20 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
             domForm.append('uploadedphoto', $scope.main.selectedPhotoFile);
             domForm.append('control', control);
             domForm.append('visibleList', visibleList);
+            console.log(visibleList);
 
             // Using $http to POST the form
             $http.post('/photos/new', domForm, {
                 transformRequest: angular.identity,
                 headers: {'Content-Type': undefined}
             }).then(function successCallback(response){
+                var photo = response.data;
+                console.log(photo.control + " is true?");
                 $http.post('/recentActivity/',JSON.stringify({
                     activity: "posted a photo",
-                    user_id: $scope.main.loggedInUser._id
+                    user_id: $scope.main.loggedInUser._id,
+                    control:photo.control,
+                    visibleList:photo.visibleList
                 })).then(function () {
                     $rootScope.$broadcast('listUpdated');
                 });
@@ -155,12 +162,15 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         $scope.main.logout = function() {
             $http.post('/recentActivity/',JSON.stringify({
                 activity: "logged out",
-                user_id: $scope.main.loggedInUser._id
+                user_id: $scope.main.loggedInUser._id,
+                control:false,
+                visibleList:[]
             })).then(function () {
                 $rootScope.$broadcast('listUpdated');
             });
             $http.post('/admin/logout','').then(function successCallback(response) {
                 $scope.main.loggedInUser = undefined;
+                $scope.main.title = 'CS142 Photo Sharing Website';
                 $location.path("/login-register");
             }, function errorCallback(response) {
                 console.log(response.data);
@@ -179,3 +189,9 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
 
 
     }]);
+// 2012-08-30 10:44:23
+function string2DateStamp(stringTime) {
+    var timestamp2 = Date.parse(stringTime);
+    timestamp2 = timestamp2 / 1000;
+    return timestamp2;
+}
