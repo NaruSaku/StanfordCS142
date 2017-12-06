@@ -66,15 +66,22 @@
             <!--This part shows the logged in user-->
 
             <div ng-show="main.loggedInUser">
-                <form>
-                    <div class="file-input">
-                        <p class="input-container">
+                <form >
+                    <div class="file-input" >
+                        <p class="input-container" >
                             Upload
                             <input type="file" accept="image/*" onchange="angular.element(this).scope().main.inputFileNameChanged(this)">
                         </p>
-                        <span id="name"></span>
                     </div>
                 </form>
+            </div>
+
+            <div ng-show="main.loggedInUser" >
+                <div class="file-input" ng-click="main.showActivities()">
+                    <p class="input-container">
+                        Activities
+                    </p>
+                </div>
             </div>
 
             <div ng-show="main.loggedInUser" class="cs142-main-barElement" title="Only show one picture each page">

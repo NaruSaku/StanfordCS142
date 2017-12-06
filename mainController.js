@@ -152,6 +152,10 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
             });
         };
 
+        $scope.main.showActivities = function () {
+            $location.path("/activity");
+        };
+
 
 
         var versionResource = $resource('/test/info');

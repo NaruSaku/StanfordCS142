@@ -83,6 +83,7 @@ input[type="file"] {
     background:#3778d8;
     color:#fff;
     border-radius:3px;
+    cursor: pointer;
 }
 .file-input input{
     position:absolute;

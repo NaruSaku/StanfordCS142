@@ -31,9 +31,9 @@ cs142App.controller('UserListController', ['$scope','$resource','$mdDialog','$lo
             }).then(function(answer) {}, function() {});
         };
 
-        $scope.userList.showActivities = function () {
-            $location.path("/activity");
-        };
+        // $scope.userList.showActivities = function () {
+        //     $location.path("/activity");
+        // };
         $scope.userList.showFavorite = function () {
             $location.path("/favorite");
         };
