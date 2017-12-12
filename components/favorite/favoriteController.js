@@ -51,7 +51,7 @@ cs142App.controller('favoriteController', ['$scope','$resource','$http','$mdDial
                     console.log(response.data);
                 });
             }, function() {
-                console.log("You don't want to delete the account at present.")
+                console.log("You don't want to delete the account at present.");
             });
 
 

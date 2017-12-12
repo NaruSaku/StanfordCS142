@@ -21,12 +21,12 @@ cs142App.controller('visibilityControlController', ['$scope', '$rootScope', '$md
                 angular.forEach($scope.visibility.users, function (i) {
                     i.checked = true;
                     $scope.visibility.checked.push(i._id);
-                })
+                });
             } else {
                 angular.forEach($scope.visibility.users, function (i) {
                     i.checked = false;
                     $scope.visibility.checked = [];
-                })
+                });
             }
             //console.log($scope.visibility.checked);
         };

@@ -29,5 +29,5 @@ cs142App.controller('DialogController', ['$scope', '$rootScope', '$mdDialog','us
                 $location.path("/activity");
             }
             $scope.dialog.cancel();
-        }
+        };
     }]);

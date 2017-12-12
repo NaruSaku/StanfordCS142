@@ -16,5 +16,5 @@ cs142App.controller('favoritePhotoController', ['$scope', '$rootScope', '$mdDial
         $scope.favoritePhoto.link_to = function () {
             $location.path("/photos/" + $scope.favoritePhoto.photo.user_id);
             $mdDialog.cancel();
-        }
+        };
     }]);

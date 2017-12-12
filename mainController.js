@@ -1,6 +1,6 @@
 'use strict';
 
-var cs142App = angular.module('cs142App', ['ngRoute', 'ngMaterial', 'ngResource','ngCookies']); /*'ngCookies'*/
+var cs142App = angular.module('cs142App', ['ngRoute', 'ngMaterial', 'ngResource','ngCookies','mentio']); /*'ngCookies'*/
 
 cs142App.config(['$routeProvider',
     function ($routeProvider) {
@@ -38,33 +38,44 @@ cs142App.config(['$routeProvider',
         });
     }]);
 
-cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$rootScope','$location','$http','$mdDialog','$anchorScroll',
-    function ($scope, $mdSidenav,$resource,$rootScope,$location,$http,$mdDialog,$anchorScroll) {
+cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$rootScope','$location','$http','$mdDialog',
+    function ($scope, $mdSidenav,$resource,$rootScope,$location,$http,$mdDialog) {
         $scope.main = {};
         $scope.main.title = 'CS142 Photo Sharing Website';
         $scope.main.authorName = "Ji Yu";
         $scope.main.loggedInUser = undefined;
         $scope.main.selectedPhotoFile = undefined;
 
-        $rootScope.$on("$routeChangeSuccess", function(event, next, current) {
-            if($location.hash()) $anchorScroll();
+        var service = {
+            SaveState: function () {
+                if ($scope.main.loggedInUser){
+                    sessionStorage.userService = angular.toJson($scope.main.loggedInUser);
+                }
+            },
+
+            RestoreState: function () {
+                //delete sessionStorage.userService;
+                if(sessionStorage.userService){
+                    $scope.main.loggedInUser = angular.fromJson(sessionStorage.userService);
+                    //console.log("RestoreState: " + $scope.main.loggedInUser);
+                }
+            }
+        };
+
+        window.onbeforeunload = function (event) {
+            $rootScope.$broadcast('savestate');
+        };
+        $rootScope.$on("savestate", service.SaveState);
+
+
+        $rootScope.$on("$routeChangeStart", function(event, next, current) {
             if ($scope.main.loggedInUser === undefined) {
                 // no logged user, redirect to /login-register unless already there
                 // This part is used to hold the session
-                var requestBody = {login_name:"session"};
-                $http.post('/admin/login', JSON.stringify(requestBody)).then(function successCallback(response) {
-                    if (response){
-                        $scope.main.loggedInUser = response.data.user;
-                        if (response.data.photo_user_id){
-                            $location.path("/photos/" + response.data.photo_user_id);
-                        } else {
-                            $location.path("/users/" + response.data.user_detail_id);
-                        }
-                    }
-                }, function errorCallback(response) {
-                    console.log(response.data);
-                });
-                // end
+                service.RestoreState();
+                if($scope.main.loggedInUser){
+                    return;
+                }
                 if (next.templateUrl !== "components/login-register/login-registerTemplate.html") {
                     $location.path("/login-register");
                 }
@@ -73,11 +84,6 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                     $location.path("/users/" + $scope.main.loggedInUser._id);
                 }
             }
-                // if (next.templateUrl === "components/login-register/login-registerTemplate.html") {
-                //     $location.path(current.templateUrl);
-                // }
-                //$location.path(current.templateUrl);
-
         });
 
         $scope.main.showUserList = function () {
@@ -171,31 +177,30 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                 visibleList:[]
             })).then(function () {
                 $rootScope.$broadcast('listUpdated');
+                $http.post('/admin/logout','').then(function successCallback(response) {
+                    delete $scope.main.loggedInUser;
+                    delete sessionStorage.userService;
+                    $scope.main.title = 'CS142 Photo Sharing Website';
+                    $location.path("/login-register");
+                }, function errorCallback(response) {
+                    console.log(response.data);
+                });
             });
-            $http.post('/admin/logout','').then(function successCallback(response) {
-                $scope.main.loggedInUser = undefined;
-                $scope.main.title = 'CS142 Photo Sharing Website';
-                $location.path("/login-register");
-            }, function errorCallback(response) {
-                console.log(response.data);
-            });
+
         };
 
-        // $rootScope.$on("emitSinglePhoto",function (event, args) {
-        //     //alert("shit");
-        //     $rootScope.$broadcast("ShowSinglePhoto",args);
-        // });
-        //
         $scope.main.submit = function () {
             $location.path("/comment/" + $scope.main.comment);
             $scope.main.comment = "";
-        }
+        };
 
 
     }]);
-// 2012-08-30 10:44:23
-function string2DateStamp(stringTime) {
-    var timestamp2 = Date.parse(stringTime);
-    timestamp2 = timestamp2 / 1000;
-    return timestamp2;
-}
+
+cs142App.run(function($rootScope, $location, $anchorScroll, $routeParams) {
+    $rootScope.$on('$routeChangeSuccess', function(newRoute, oldRoute) {
+        $location.hash($routeParams.scrollTo);
+        $anchorScroll();
+    });
+});
+

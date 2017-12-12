@@ -1,7 +1,7 @@
 'use strict';
 
-cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource','$http', '$rootScope','$location','$mdDialog','$anchorScroll',
-    function($scope, $routeParams,$resource, $http, $rootScope,$location,$mdDialog,$anchorScroll) {
+cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource','$http', '$rootScope','$location','$mdDialog','$anchorScroll','mentioUtil',
+    function($scope, $routeParams,$resource, $http, $rootScope,$location,$mdDialog,$anchorScroll,mentioUtil) {
         /*
          * Since the route is specified as '/photos/:userId' in $routeProvider config the
          * $routeParams  should have the userId property set with the path from the URL.
@@ -13,10 +13,12 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         $scope.userPhotos.photos2 = [];
         $scope.userPhotos.index = 0;
         $scope.userPhotos.noPhotos = false;
+        $scope.userPhotos.people = [];
 
 
         var User = $resource('/user/:userId');
         var userPhotos = $resource('/photosOfUser/:userId');
+        var userList = $resource("/user/list");
 
         //
         var obj = document.getElementById("advanced-feature");
@@ -100,7 +102,18 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         $scope.userPhotos.reload();
 
         $scope.userPhotos.addComment = function(photo) {
-            var data = JSON.stringify({comment: $scope.userPhotos.newComment,owner_id:photo.user_id});
+            var data = JSON.stringify({
+                comment: $scope.userPhotos.newComment,
+                owner_id:photo.user_id
+            });
+            var mentions = processComment(photo);
+            if (mentions.length !== 0){
+                $http.post("/mentions",JSON.stringify({mentions:mentions})).then(function successCallback(response) {
+                    console.log("mentions added.");
+                }, function errorCallback(response) {
+                    console.log(response.data);
+                });
+            }
             $http.post("/commentsOfPhoto/" + photo._id, data).then(function successCallback(response) {
                 $http.post('/recentActivity/',JSON.stringify({
                     activity: "added a comment",
@@ -148,7 +161,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                     console.log(response.data);
                 });
             }, function() {
-                console.log("You don't want to delete the comment at present.")
+                console.log("You don't want to delete the comment at present.");
             });
         };
 
@@ -166,7 +179,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                     console.log(response.data);
                 });
             }, function() {
-                console.log("You don't want to delete the photo at present.")
+                console.log("You don't want to delete the photo at present.");
             });
 
         };
@@ -191,34 +204,23 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         };
 
         /* This part is for the like and dislike */
-        $scope.userPhotos.like = function(photo,likeOrDislike) {
+        $scope.userPhotos.like = function(photo) {
             var photo_id = photo._id;
-            $http.post('/likePhoto', JSON.stringify({photo_id:photo_id,like:likeOrDislike})).then(function successCallback(response) {
+            $http.post('/likePhoto', JSON.stringify({photo_id:photo_id})).then(function successCallback(response) {
                 $rootScope.$broadcast("photoLiked");
                 console.log(response.data.liked);
             }, function errorCallback(response) {
                 console.log(response.data);
             });
         };
-
-        /**This part is not being used currently*/
         $scope.userPhotos.dislike = function(photo) {
             var photo_id = photo._id;
             $http.post('/dislikePhoto', JSON.stringify({photo_id:photo_id})).then(function successCallback(response) {
-                $rootScope.$broadcast("photoLiked");
-                console.log(response.data.liked);
+                $rootScope.$broadcast("photoDisLiked");
             }, function errorCallback(response) {
                 console.log(response.data);
             });
         };
-        // $scope.userPhotos.dislike = function(photo) {
-        //     var photo_id = photo._id;
-        //     $http.post('/dislikePhoto', JSON.stringify({photo_id:photo_id})).then(function successCallback(response) {
-        //         $rootScope.$broadcast("photoDisLiked");
-        //     }, function errorCallback(response) {
-        //         console.log(response.data);
-        //     });
-        // };
         $scope.userPhotos.favorite = function(photo) {
             var photo_id = photo._id;
             photo.favorite = !photo.favorite;
@@ -229,6 +231,58 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                 console.log(response.data);
             });
         };
+
+        userList.query({}, function (users) {
+            $scope.userPhotos.userNames = users;
+        });
+
+        $scope.userPhotos.searchPeople = function(term) {
+            var peopleList = [];
+            angular.forEach($scope.userPhotos.userNames, function(person) {
+                if (person.first_name.toUpperCase().indexOf(term.toUpperCase()) >= 0 || person.last_name.toUpperCase().indexOf(term.toUpperCase()) >= 0) {
+                    peopleList.push(person);
+                }
+            });
+            $scope.userPhotos.people = peopleList;
+            return peopleList;
+        };
+
+        $scope.userPhotos.getTagTextRaw = function(user) {
+            return '@' + user.first_name + ' ' + user.last_name;
+        };
+
+        function processComment(photo){
+            var i, j;
+            var findMentions = /@\w+ \w+/i;
+            var resArr = [];
+            var mentArr = $scope.userPhotos.newComment.match(findMentions);
+            if(!mentArr){
+                return resArr;
+            }
+            for(i = 0; i < mentArr.length; i++){
+                var name = mentArr[i].slice(1).split(" ");
+                if (name.length < 2){
+                    return null;
+                }
+
+                for(j = 0; j < $scope.userPhotos.userNames.length; j++){
+                    if ($scope.userPhotos.userNames[j].first_name === name[0] &&
+                        $scope.userPhotos.userNames[j].last_name === name[1]) {
+                            resArr.push({
+                                user_id: $scope.userPhotos.userNames[j]._id, 
+                                text: $scope.userPhotos.newComment, 
+                                photo_id: photo._id,
+                                photo_owner: photo.user_id, 
+                                photo_name: photo.file_name,
+                                user_first_name: $scope.main.loggedInUser.first_name,
+                                user_last_name: $scope.main.loggedInUser.last_name
+                            });
+                    }
+                }
+            }
+            console.log(resArr);
+            return resArr;
+        }
 
         /** doesn't work here*/
         // $scope.$on("bottom",$scope.gotoBottom);
@@ -256,9 +310,6 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         };
 
 
-
-
-
         $scope.$on("commentAdded", $scope.userPhotos.reload);
         $scope.$on("commentDeleted", $scope.userPhotos.reload);
         $scope.$on('photoUploaded', $scope.userPhotos.reload);
@@ -267,3 +318,10 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         $scope.$on('photoLiked', $scope.userPhotos.reload);
         $scope.$on('photoDisLiked', $scope.userPhotos.reload);
     }]);
+
+// 2012-08-30 10:44:23
+function string2DateStamp(stringTime) {
+    var timestamp2 = Date.parse(stringTime);
+    timestamp2 = timestamp2 / 1000;
+    return timestamp2;
+}

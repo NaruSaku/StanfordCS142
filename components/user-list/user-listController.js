@@ -31,9 +31,6 @@ cs142App.controller('UserListController', ['$scope','$resource','$mdDialog','$lo
             }).then(function(answer) {}, function() {});
         };
 
-        // $scope.userList.showActivities = function () {
-        //     $location.path("/activity");
-        // };
         $scope.userList.showFavorite = function () {
             $location.path("/favorite");
         };
@@ -43,7 +40,6 @@ cs142App.controller('UserListController', ['$scope','$resource','$mdDialog','$lo
                 $scope.userList.list = response.data;
                 // choose the first 4
                 $scope.userList.list = $scope.userList.list.slice(0,4);
-                console.log($scope.userList.list);
             });
         };
         $scope.userList.load();

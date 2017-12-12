@@ -34,11 +34,12 @@ var Photo = require('./schema/photo.js');
 var SchemaInfo = require('./schema/schemaInfo.js');
 var Comment = require('./schema/comment.js');
 var Activity = require('./schema/activity.js');
+var Mention = require('./schema/mention.js');
 
 var versionString = '1.0';
 
 // We start by removing anything that existing in the collections.
-var removePromises = [User.remove({}), Photo.remove({}), SchemaInfo.remove({}),Comment.remove({}),Activity.remove({})];
+var removePromises = [User.remove({}), Photo.remove({}), SchemaInfo.remove({}),Comment.remove({}),Activity.remove({}),Mention.remove({})];
 
 Promise.all(removePromises).then(function () {
 
@@ -153,7 +154,7 @@ Promise.all(removePromises).then(function () {
         //         }
         //     });
         // });
-    })
+    });
 
     allPromises.then(function () {
         mongoose.disconnect();

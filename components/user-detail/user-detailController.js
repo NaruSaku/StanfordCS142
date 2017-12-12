@@ -7,7 +7,6 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
          * $routeParams  should have the userId property set with the path from the URL.
          */
         var userId = $routeParams.userId;
-        //console.log('UserDetail of ', userId);
         var userData = $resource('/user/:userId');
         var userPhotoData = $resource('/userPhoto/:userId');
 
@@ -26,21 +25,35 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
             $scope.userDetail.mostCommentsPhoto = userPhotoDetail.mostCommentsPhoto;
         });
 
+        
+        $http.post('/getMention',JSON.stringify({'user_id':userId}))
+        .then(function successCallback(response) {
+            $scope.userDetail.mentions = response.data;
+            console.log($scope.userDetail.mentions.length);
+            for (var index = 0; index < $scope.userDetail.mentions.length; index++){
+                console.log($scope.userDetail.mentions[index].photo_owner);
+            }
+        }, function errorCallback(response) {
+            console.log(response.data);
+        });
+        
         $scope.userDetail.showDetail = function(photo){
             //$scope.$emit("emitSinglePhoto",photo);
             $rootScope.$broadcast("bottom");
-            //alert("shit");
             $location.path("/photos/" + photo.user_id);
-
         };
 
         $scope.userDetail.hasAuthority = function () {
-            if ($scope.main.loggedInUser === undefined) return false;
+            if ($scope.main.loggedInUser === undefined){
+                return false;
+            }
             return $scope.main.loggedInUser._id === userId;
         };
 
         $scope.userDetail.deleteAccount = function (ev) {
-            if (!$scope.userDetail.hasAuthority) return;
+            if (!$scope.userDetail.hasAuthority){
+                return;
+            }
             var confirm = $mdDialog.confirm()
                 .title('This will delete the all the information in your account!')
                 .textContent('This action cannot be revoked')
@@ -57,8 +70,8 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
                     console.log(response.data);
                 });
             }, function() {
-                console.log("You don't want to delete the account at present.")
+                console.log("You don't want to delete the account at present.");
             });
 
-        }
+        };
     }]);

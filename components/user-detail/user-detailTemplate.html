@@ -38,6 +38,15 @@
             <div class="cs142-detail-thumbnailDate">Comments Number: {{userDetail.mostCommentsPhoto.comments.length}}</div>
         </div>
     </div>
+    <div ng-repeat="mention in userDetail.mentions">
+        <div layout="row">
+            <a ng-href="#!/photos/{{mention.photo_owner}}">
+            <image ng-src="../../images/{{mention.photo_name}}" style="border-radius: 50%; width: 50px; height: 50px" />
+            </a>
+        
+            <a ng-href="#!users/{{mention.user_id}}">{{mention.user_first_name}} {{mention.user_last_name}}</a>
+        </div>
+    </div>
 
 
 </div>

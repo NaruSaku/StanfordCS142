@@ -41,6 +41,7 @@ var Photo = require('./schema/photo.js');
 var SchemaInfo = require('./schema/schemaInfo.js');
 var Comment = require('./schema/comment.js');
 var Activity = require('./schema/activity.js');
+var Mention = require('./schema/mention.js');
 
 var express = require('express');
 var app = express();
@@ -63,7 +64,6 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
 session.user_id = "";
-
 
 app.get('/', function (request, response) {
     response.send('Simple web server of files from ' + __dirname);
@@ -192,12 +192,9 @@ app.get('/user/:id', function (request, response) {
         return;
     }
     var id = request.params.id;
-    /*This part is to test the photo link*/
-    //request.session.photo_user_id = user_id;
-    request.session.photo_user_id = "";
-    request.session.user_detail_id = id;
     User.findOne({'_id':id},
-        ['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list'],function (err,userDetail) {
+        ['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list'],
+        function (err,userDetail) {
         if (err){
             response.status(400).send(JSON.stringify(err));
             return;
@@ -207,7 +204,7 @@ app.get('/user/:id', function (request, response) {
             return;
         }
         response.status(200).send(userDetail);
-    })
+    });
 });
 /*This part is used to get the photo recently updated and with most comments*/
 app.get('/userPhoto/:id', function (request, response) {
@@ -361,7 +358,7 @@ app.get('/comment/:text', function (request, response) {
                 console.log(photo); //null
                 send_photos.push(photo);
                 comment_callback();
-            })
+            });
         },function (err) {
             if (err) {
                 response.status(400).send(JSON.stringify(err));
@@ -374,8 +371,8 @@ app.get('/comment/:text', function (request, response) {
                 comments:send_comments,
                 photos:send_photos
             });
-        })
-    })
+        });
+    });
 });
 
 /*
@@ -452,23 +449,26 @@ app.post('/admin/login', function(request, response) {
             if (err){
                 request.status(400).send();
             }
-            var photo_user_id = request.session.photo_user_id;
-            var user_detail_id = request.session.user_detail_id;
-            response.status(200).send({user:{_id:user._id},photo_user_id:photo_user_id,user_detail_id:user_detail_id});
+            response.status(200).send({
+                _id:user._id,
+                first_name:user.first_name,
+                last_name:user.last_name
+            });
         });
         return;
     }
-    if (request.body.login_name === "session"){
-        return;
-    }
-    //
+
     User.findOne({login_name: request.body.login_name}, function(err, user) {
         if (user !== null) {
             if(cs142password.doesPasswordMatch(user.password_digest, user.salt, request.body.password)){
                 request.session.user_id = user._id;
                 request.session.user_detail_id = user._id;
                 //session.user_id = user._id;
-                response.status(200).send({_id:user._id});
+                response.status(200).send({
+                    _id:user._id,
+                    first_name:user.first_name,
+                    last_name:user.last_name
+                });
             } else {
                 response.status(400).send("Password is not correct!");
             }
@@ -549,9 +549,7 @@ app.post('/photos/new', function(request, response) {
         var filename = 'U' +  String(timestamp) + request.file.originalname;
 
         var visibleList = request.body.visibleList.split(',');
-        //console.log("visibleList:" + visibleList);
         var control = (request.body.control === "true");
-        //console.log("control in web server:" + control);
 
         fs.writeFile("./images/" + filename, request.file.buffer, function (err) {
             // XXX - Once you have the file written into your images directory under the name
@@ -583,7 +581,7 @@ app.post('/photos/new', function(request, response) {
                 }
                 user.recent_uploaded_photo = "images/" + filename;
                 user.save();
-            })
+            });
         });
     });
 });
@@ -649,9 +647,6 @@ app.post('/commentsOfPhoto/:photo_id', function(request, response) {
         //     });
         //
         // });
-
-
-
     }
 });
 
@@ -688,7 +683,7 @@ app.post('/deletePhoto', function(request, response) {
                 }
                 user.save();
                 callback();
-            })
+            });
         });
 
         var dislike_user_ids_list = photo.dislike_user_ids;
@@ -704,7 +699,7 @@ app.post('/deletePhoto', function(request, response) {
                 }
                 user.save();
                 callback();
-            })
+            });
         });
         Photo.remove({_id: photo_id}, function(err) {
             // this part is necessary!
@@ -712,9 +707,11 @@ app.post('/deletePhoto', function(request, response) {
         response.status(200).end();
     });
     Comment.remove({photo_id:photo_id}, function(err, comments){
-        if(err) console.log(err);
+        if(err){
+            console.log(err);
+        }
         console.log('Successfully deleted：' + comments);
-    })
+    });
 });
 
 app.post('/deleteComment', function(request, response) {
@@ -749,9 +746,11 @@ app.post('/deleteComment', function(request, response) {
         }
     });
     Comment.remove({_id:comment_id}, function(err, comments){
-        if(err) console.log(err);
+        if(err){
+            console.log(err);
+        }
         console.log('Successfully deleted：' + comments);
-    })
+    });
 });
 
 
@@ -872,15 +871,8 @@ app.post('/photoView', function(request, response) {
 /**This part has been revised to meet the instructions
  * The original part can been seen on Github */
 app.post('/likePhoto', function(request, response) {
-    if (!request.session.user_id) {
-        response.status(401).send("You don't have the authority.");
-        return;
-    }
     var photo_id = request.body.photo_id;
     var user_id = request.session.user_id;
-    var likeOrDislike = request.body.like;
-    console.log("likeOrDislike:" + likeOrDislike);
-
 
     Photo.findOne({_id: photo_id}, function(err, photo) {
         if (err) {
@@ -888,10 +880,14 @@ app.post('/likePhoto', function(request, response) {
             return;
         }
         photo.view_times--;
-        if (likeOrDislike && photo.like_user_ids.indexOf(user_id) < 0){   // like
-            photo.like_user_ids.push(user_id);
-        } else if (likeOrDislike === false && photo.like_user_ids.indexOf(user_id) >= 0){              // dislike
+        if (photo.dislike_user_ids.indexOf(user_id) >= 0){
+            response.status(400).send("You have already disliked this photo.");
+            return;
+        }
+        if (photo.like_user_ids.indexOf(user_id) >= 0) {
             photo.like_user_ids.remove(user_id);
+        } else {
+            photo.like_user_ids.push(user_id);
         }
         photo.save();
         User.findOne({_id:user_id},function (err,user) {
@@ -900,20 +896,19 @@ app.post('/likePhoto', function(request, response) {
                 return;
             }
             var likePhotoList = user.photo_liked_list;
-            if (likeOrDislike === false && likePhotoList.indexOf(photo_id) >= 0){
+            if (likePhotoList.indexOf(photo_id) >= 0){
                 likePhotoList.remove(photo_id);
-            } else if (likeOrDislike === true && likePhotoList.indexOf(photo_id) < 0){
+            } else {
                 likePhotoList.push(photo_id);
             }
-            //console.log("likePhotoList: " + likePhotoList);
+            console.log("likePhotoList: " + likePhotoList);
             user.save();
-            var bool = likePhotoList.indexOf(photo_id) >= 0;
-            response.status(200).send({liked:bool});
+            response.status(200).send({liked:true});
         })
     });
 });
 
-/**This part is not being used currently*/
+
 app.post('/dislikePhoto', function(request, response) {
     var photo_id = request.body.photo_id;
     var user_id = request.session.user_id;
@@ -962,7 +957,7 @@ app.post('/recentActivity/', function(request, response){
     var activity = request.body.activity;
     var photo_name = request.body.photo_name;
     // if control is true, visible_to_all is false;
-    var visible_to_all = !(request.body.control === true);
+    var visible_to_all = (request.body.control !== true);
     //console.log("visible_to_all:" + visible_to_all);
     var visible_list = request.body.visibleList;
     //console.log("visible_List:" + visible_list);
@@ -993,7 +988,7 @@ app.post('/recentActivity/', function(request, response){
         }
 
         var new_activity = {
-            activity:activity + " at " + new Date().toLocaleString(),
+            activity:activity,
             date_time:new Date().toLocaleString(),
             user_name:user.first_name + " " + user.last_name,
             photo_name:photo_show,
@@ -1034,7 +1029,7 @@ app.post('/activity',function (request,response) {
         }
         activity_list.list = activity_list.list.filter(function (activity) {
             //console.log("activity.visible_list" + activity.visible_list);
-            return (activity.visible_to_all || activity.visible_list.indexOf(request.session.user_id) >= 0)
+            return (activity.visible_to_all || activity.visible_list.indexOf(request.session.user_id) >= 0);
         });
         var length = activity_list.list.length;
         if (length > 20){
@@ -1063,7 +1058,7 @@ app.post('/getFavorite',function (request,response) {
                 console.log(photo);
                 result.push(photo);
                 done_callback();
-            })
+            });
         },function (err) {
             console.log(result);
             response.status(200).send(result);
@@ -1092,6 +1087,57 @@ app.post('/favorite',function (request,response) {
         response.status(200).send({length:list.length});
     });
 });
+
+app.post('/mentions', function (request, response) {
+    var mentions = request.body.mentions;
+    var mentionPromises = mentions.map(function (mention){
+        return Mention.create(mention, function (err, mentionObj) {
+            if (err) {
+                console.error('Error create photo', err);
+            } else {
+                console.log('Adding mentions');
+            }
+        });
+    });
+    Promise.all(mentionPromises).then(function(value){
+        response.status(200).send('mentions saved');
+    });
+});
+
+app.post('/getMention', function (request, response) {
+    if (!request.session.user_id) {
+        response.status(401).send('Get the user unauthorized');
+        return;
+    }
+    var user_id = request.body.user_id;
+    Mention.find({user_id: user_id},function(err, mentions){
+        if(err){
+            response.status(400).send('Server error');
+            return;
+        }
+        if (!mentions) {
+            response.status(200).send('No mentions are found!');
+            return;
+        }
+        console.log(mentions + "!");
+        response.status(200).send(mentions);
+    });
+});
+// app.get('/mention/:user_id', function (request, response) {
+//     var user_id = request.params.user_id;
+//     Mention.find({user_id: user_id})
+//     .exec(function(err, mentions){
+//         if(err){
+//             response.status(400).send('Server error');
+//             return;
+//         }
+//         if (!mentions) {
+//             response.status(200).send('No mentions are found!');
+//             return;
+//         }
+//         response.status(200).send(mentions);
+//     });
+// });
 
 
 
