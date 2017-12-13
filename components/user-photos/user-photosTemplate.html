@@ -9,6 +9,9 @@
             <md-button class="md-primary md-raised" ng-if="userPhotos.hasPhotoAuthority(photo)" ng-click="userPhotos.delete($event,photo)">
                 Delete
             </md-button>
+            <md-button class="md-primary md-raised" ng-if="!userPhotos.hasPhotoAuthority(photo)" ng-href="/images/{{photo.file_name}}">
+                Download
+            </md-button>
         </div>
 
         <img ng-src="/images/{{photo.file_name}}" class="cs142-photos-image">
@@ -24,6 +27,9 @@
             <div class="cs142-photos-like">
                 <img ng-if="!photo.favorite"ng-src="/images/greyheart.png" ng-click = "userPhotos.favorite(photo)">
                 <img ng-if="photo.favorite"ng-src="/images/heart.png" ng-click = "userPhotos.favorite(photo)">
+            </div>
+            <div class="cs142-photos-like">
+                <img ng-src="/images/forward.png" ng-click = "userPhotos.forward(photo)">
             </div>
             <div class="cs142-photos-like">
                 <img ng-src="/images/dislike2.png" ng-click = "userPhotos.dislike(photo)">

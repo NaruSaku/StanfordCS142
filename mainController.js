@@ -45,6 +45,7 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         $scope.main.authorName = "Ji Yu";
         $scope.main.loggedInUser = undefined;
         $scope.main.selectedPhotoFile = undefined;
+        $scope.main.upload = false;
 
         var service = {
             SaveState: function () {
@@ -91,7 +92,7 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         };
 
         /* Reference:http://blog.csdn.net/YYecust/article/details/52419522 */
-        $scope.main.controlVisibility = function() {
+        $scope.main.controlVisibility = function(photo) {
             console.log("Begin to upload photo.");
             var child = $scope.$new(false,$scope);
             $mdDialog.show({
@@ -100,11 +101,19 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                 scope: child,
                 templateUrl: 'components/visibility-control/visibility-controlTemplate.html'
             }).then(function(result) { // everybody can see
-                $scope.main.uploadPhoto(true, result);
+                if ($scope.main.upload){
+                    $scope.main.uploadPhoto(true, result);
+                } else {
+                    $scope.main.forward(result,photo,true);
+                }
             }, function(result) {   // only people on the list can see
                 if (result){
-                    var visibleList = [];
-                    $scope.main.uploadPhoto(false, visibleList);
+                    if ($scope.main.upload){
+                        var visibleList = [];
+                        $scope.main.uploadPhoto(false, visibleList);
+                    } else {
+                        $scope.main.forward(result,photo,false);
+                    }
                 }
             });
         };
@@ -112,6 +121,7 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         //Called on file selection - we simply save a reference to the file in selectedPhotoFile
         $scope.main.inputFileNameChanged = function (element) {
             $scope.main.selectedPhotoFile = element.files[0];
+            $scope.main.upload = true;
             $scope.main.controlVisibility();
         };
 
@@ -151,12 +161,27 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
 
                 $rootScope.$broadcast("photoUploaded");
                 $location.path("/photos/" + $scope.main.loggedInUser._id);
+                $scope.main.selectedPhotoFile = undefined;
+                $scope.main.upload = false;
                 console.log("Photo has been uploaded successfully!");
             }, function errorCallback(response){
                 // Couldn't upload the photo. XXX  - Do whatever you want on failure.
                 console.error('ERROR uploading photo', response);
             });
         };
+
+        $scope.main.forward = function(visibleList,photo,control){
+            console.log(photo);
+            $http.post('/photos/forward',JSON.stringify({
+                'photo':photo,
+                'visibleList':visibleList,
+                'control':control
+            })).then(function successCallback(response){
+                $rootScope.$broadcast("photoUploaded");
+            },function errorCallback(response){
+                console.error('ERROR forwarding photo', response);
+            });
+        }
 
         $scope.main.showActivities = function () {
             $location.path("/activity");

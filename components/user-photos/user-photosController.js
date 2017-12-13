@@ -138,7 +138,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                 return $scope.main.loggedInUser._id === photo.user_id;
             }
         };
-
+  
         $scope.userPhotos.hasCommentAuthority = function (comment) {
             if ($scope.main.loggedInUser){
                 return $scope.main.loggedInUser._id === comment.user_id;
@@ -208,7 +208,7 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
             var photo_id = photo._id;
             $http.post('/likePhoto', JSON.stringify({photo_id:photo_id})).then(function successCallback(response) {
                 $rootScope.$broadcast("photoLiked");
-                console.log(response.data.liked);
+                //console.log(response.data.liked);
             }, function errorCallback(response) {
                 console.log(response.data);
             });
@@ -269,10 +269,11 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                     if ($scope.userPhotos.userNames[j].first_name === name[0] &&
                         $scope.userPhotos.userNames[j].last_name === name[1]) {
                             resArr.push({
-                                user_id: $scope.userPhotos.userNames[j]._id, 
-                                text: $scope.userPhotos.newComment, 
-                                photo_id: photo._id,
-                                photo_owner: photo.user_id, 
+                                caller_id:$scope.main.loggedInUser._id,
+                                user_id: $scope.userPhotos.userNames[j]._id,  // people who is mentioned
+                                text: $scope.userPhotos.newComment,  
+                                photo_id: photo._id,                          // at which photo the person is mentioned
+                                photo_owner: photo.user_id,                   
                                 photo_name: photo.file_name,
                                 user_first_name: $scope.main.loggedInUser.first_name,
                                 user_last_name: $scope.main.loggedInUser.last_name
@@ -283,6 +284,10 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
             console.log(resArr);
             return resArr;
         }
+
+        $scope.userPhotos.forward = function(photo) {
+            $scope.main.controlVisibility(photo);
+        };
 
         /** doesn't work here*/
         // $scope.$on("bottom",$scope.gotoBottom);

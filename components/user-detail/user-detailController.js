@@ -17,24 +17,12 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
             $scope.userDetail.fullName = userData.first_name + " " + userData.last_name;
             $scope.main.appContext = $scope.userDetail.fullName;
             $scope.main.title = $scope.userDetail.fullName;
-
+            $scope.userDetail.showMention();
         });
 
         userPhotoData.get({'userId':userId},function (userPhotoDetail) {
             $scope.userDetail.mostRecentlyPhoto = userPhotoDetail.mostRecentlyPhoto;
             $scope.userDetail.mostCommentsPhoto = userPhotoDetail.mostCommentsPhoto;
-        });
-
-        
-        $http.post('/getMention',JSON.stringify({'user_id':userId}))
-        .then(function successCallback(response) {
-            $scope.userDetail.mentions = response.data;
-            console.log($scope.userDetail.mentions.length);
-            for (var index = 0; index < $scope.userDetail.mentions.length; index++){
-                console.log($scope.userDetail.mentions[index].photo_owner);
-            }
-        }, function errorCallback(response) {
-            console.log(response.data);
         });
         
         $scope.userDetail.showDetail = function(photo){
@@ -74,4 +62,30 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
             });
 
         };
+
+        $scope.userDetail.showMention = function(parameter) {
+            var all = false;
+            if (parameter === true){
+                all = true;
+            }
+            $http.post('/getMention',JSON.stringify({'user_id':userId,'all':all}))
+            .then(function successCallback(response) {
+                $scope.userDetail.mentions = response.data;
+            }, function errorCallback(response) {
+                console.log(response.data);
+            });
+        }
+
+        
+
+        $scope.userDetail.deleteMention = function(mention) {
+            $http.post('/changeMentionState',JSON.stringify({mention:mention})).then(function successCallback(response) {
+                $rootScope.$broadcast("mentionDeleted");
+            }, function errorCallback(response) {
+                console.log(response.data);
+            });
+        }
+
+        $scope.$on("mentionDeleted",$scope.userDetail.showMention);
+
     }]);

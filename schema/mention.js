@@ -13,6 +13,7 @@ var mongoose = require('mongoose');
  * this Schema:
  */
 var mentionSchema = new mongoose.Schema({
+	caller_id:mongoose.Schema.Types.ObjectId,
     text: String,
     photo_id: mongoose.Schema.Types.ObjectId,
     user_id: mongoose.Schema.Types.ObjectId,
@@ -20,6 +21,7 @@ var mentionSchema = new mongoose.Schema({
     photo_owner: mongoose.Schema.Types.ObjectId,
     user_first_name: String,
     user_last_name: String,
+    read: {type:Boolean,default:false}
 });
 // the schema is useless so far
 // we need to create a model using it

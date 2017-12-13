@@ -1110,6 +1110,7 @@ app.post('/getMention', function (request, response) {
         return;
     }
     var user_id = request.body.user_id;
+    var all = request.body.all;
     Mention.find({user_id: user_id},function(err, mentions){
         if(err){
             response.status(400).send('Server error');
@@ -1119,25 +1120,70 @@ app.post('/getMention', function (request, response) {
             response.status(200).send('No mentions are found!');
             return;
         }
-        console.log(mentions + "!");
+        mentions = JSON.parse(JSON.stringify(mentions));
+        if (all !== true){
+            mentions = mentions.filter(function(mention) {
+                return mention.read === false;
+            });
+        }
         response.status(200).send(mentions);
     });
 });
-// app.get('/mention/:user_id', function (request, response) {
-//     var user_id = request.params.user_id;
-//     Mention.find({user_id: user_id})
-//     .exec(function(err, mentions){
-//         if(err){
-//             response.status(400).send('Server error');
-//             return;
-//         }
-//         if (!mentions) {
-//             response.status(200).send('No mentions are found!');
-//             return;
-//         }
-//         response.status(200).send(mentions);
-//     });
-// });
+
+app.post('/changeMentionState', function (request, response) {
+    if (!request.session.user_id) {
+        response.status(401).send('Get the user unauthorized');
+        return;
+    }
+    var mention = request.body.mention;
+    Mention.findOne({_id: mention._id},function(err, mention_read){
+        console.log(mention_read.read);
+        if(err){
+            response.status(400).send('Server error');
+            return;
+        }
+        if (!mention_read) {
+            response.status(200).send('No mentions are found!');
+            return;
+        }
+        mention_read.read = true;
+        mention_read.save();
+        console.log(mention_read.read + "!");
+        response.status(200).send();
+    });
+});
+
+app.post('/photos/forward', function(request, response) {
+    var photo = request.body.photo;
+    var visibleList = request.body.visibleList;
+    var control = request.body.control;
+
+    var newPhoto = {
+        file_name: photo.file_name,
+        user_id: request.session.user_id,
+        comments: [],
+        control:control,
+        date_time:new Date().toLocaleString()
+    };
+    if (control){
+        newPhoto.visibleList=visibleList;
+    }
+    Photo.create(newPhoto, function(err, createdPhoto) {
+        if (err) {
+            console.log(err);
+            response.status(400).send("Error uploading photo");
+        }
+        response.status(200).send(createdPhoto);
+    });
+    User.findOne({_id:request.session.user_id},function (err,user) {
+        if (err) {
+            response.status(400).send(JSON.stringify(err));
+        }
+        user.recent_uploaded_photo = "images/" + photo.file_name;
+        user.save();
+    });
+});
+
 
 
 

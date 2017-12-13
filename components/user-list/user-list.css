@@ -92,6 +92,8 @@ md-sidenav{
     height: 6em;
     width: 6em;
     display: block;
+    border-radius: 5px;
+    border: black 2px solid;
 }
 
 .cs142-userList-photos{
