@@ -38,15 +38,31 @@
             <div class="cs142-detail-thumbnailDate">Comments Number: {{userDetail.mostCommentsPhoto.comments.length}}</div>
         </div>
     </div>
-    <div ng-repeat="mention in userDetail.mentions">
-        <div layout="row">
-            <a ng-href="#!/photos/{{mention.photo_owner}}">
-            <image ng-src="../../images/{{mention.photo_name}}" style="border-radius: 50%; width: 50px; height: 50px" />
-            </a>
-        
-            <a ng-href="#!users/{{mention.user_id}}">{{mention.user_first_name}} {{mention.user_last_name}}</a>
-        </div>
+
+    <div ng-show="userDetail.hasAuthority()">
+        <md-button ng-click="userDetail.showMention(true)">See All Mentions</md-button>
+        <table class="cs142-detail-table">
+            <tr ng-repeat="mention in userDetail.mentions">
+                <td style="width:10%">
+                    <a ng-href="#!/photos/{{mention.photo_owner}}">
+                        <img ng-src="../../images/{{mention.photo_name}}" class="cs142-detail-mentionPhoto"/>
+                    </a>
+                </td>
+                <td style="width:20%">
+                    <a ng-href="#!users/{{mention.caller_id}}" >
+                        <div class="cs142-detail-mentionUser">{{mention.user_first_name}} {{mention.user_last_name}}</div>
+                    </a>
+                </td>
+                <td style="width:65%">
+                    <div class="cs142-detail-mentionUser">{{mention.text}}</div>
+                </td>
+                <td style="width:5%">
+                    <md-button ng-click="userDetail.deleteMention(mention)">Read and Hide</md-button>
+                </td>
+            </tr>
+        </table>
     </div>
+    
 
 
 </div>
