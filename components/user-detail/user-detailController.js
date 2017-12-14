@@ -10,20 +10,50 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
         var userData = $resource('/user/:userId');
         var userPhotoData = $resource('/userPhoto/:userId');
 
+
+
         $scope.userDetail = {};
+        $scope.userDetail.profile = {};
 
-        userData.get({'userId':userId},function (userData) {
-            $scope.userDetail.user = userData;
-            $scope.userDetail.fullName = userData.first_name + " " + userData.last_name;
-            $scope.main.appContext = $scope.userDetail.fullName;
-            $scope.main.title = $scope.userDetail.fullName;
-            $scope.userDetail.showMention();
-        });
+        $scope.userDetail.load = function(){
+            userData.get({'userId':userId},function (userData) {
+                $scope.userDetail.user = userData;
+                $scope.userDetail.fullName = userData.first_name + " " + userData.last_name;
+                $scope.main.appContext = $scope.userDetail.fullName;
+                $scope.main.title = $scope.userDetail.fullName;
+                $scope.userDetail.showMention();
 
-        userPhotoData.get({'userId':userId},function (userPhotoDetail) {
-            $scope.userDetail.mostRecentlyPhoto = userPhotoDetail.mostRecentlyPhoto;
-            $scope.userDetail.mostCommentsPhoto = userPhotoDetail.mostCommentsPhoto;
-        });
+                var photo_profile = $scope.userDetail.user.profile;  // photo_id
+                if (photo_profile === '5a31ca6582fe983ecda367c0'){
+                    $scope.userDetail.profile.file_name = "default-profile.jpeg";
+                } else {
+                    var profile = $resource('/profile/:photo_profile');
+                    profile.get({'photo_profile':photo_profile},function(pro){
+                        $scope.userDetail.profile = pro;
+                    });
+                }
+            });
+            userPhotoData.get({'userId':userId},function (userPhotoDetail) {
+                $scope.userDetail.mostRecentlyPhoto = userPhotoDetail.mostRecentlyPhoto;
+                $scope.userDetail.mostCommentsPhoto = userPhotoDetail.mostCommentsPhoto;
+            });
+        };
+
+        $scope.userDetail.load();
+
+        $scope.userDetail.changeProfile = function(){
+            $mdDialog.show({
+                controller: 'profileController',
+                templateUrl: 'components/user-detail/profileTemplate.html',
+                parent: angular.element(document.body),
+                // targetEvent: ev,
+                clickOutsideToClose:true,
+                locals:{
+                    profile:$scope.userDetail.profile,
+                    userId:$scope.main.loggedInUser._id
+                }
+            }).then(function(answer) {}, function() {});
+        };
         
         $scope.userDetail.showDetail = function(photo){
             //$scope.$emit("emitSinglePhoto",photo);
@@ -87,5 +117,6 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
         }
 
         $scope.$on("mentionDeleted",$scope.userDetail.showMention);
+        $scope.$on("ProfileChanged",$scope.userDetail.load);
 
     }]);

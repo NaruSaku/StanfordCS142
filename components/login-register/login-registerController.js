@@ -135,4 +135,19 @@ cs142App.controller('LoginRegisterController', ['$scope', '$resource', '$http', 
             $scope.register.password2 = "";
             $scope.register.error = "";
         };
+
+        var now = new Date();
+        var hour = now.getHours();
+        var background_img = document.getElementById("cs142-login-login");
+        if (hour >= 10 && hour <= 15){
+            background_img.style.background = 'url("/images/afternoon.jpeg")';
+            background_img.style.backgroundSize = '100%';
+        } else if (hour >= 15 && hour <= 17){            
+            background_img.style.background = 'url("/images/4pm-5pm.jpeg")';
+            background_img.style.backgroundSize = '100%';
+        } else if (hour >= 6 && hour <= 17){            
+            background_img.style.background = 'url("/images/background.jpeg")';
+            background_img.style.backgroundSize = '100%';
+        }
+
     }]);

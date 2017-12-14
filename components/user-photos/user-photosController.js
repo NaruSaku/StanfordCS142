@@ -83,22 +83,6 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
 
         };
 
-        /** This part is used to show only one picture at a time */
-        // $rootScope.$on("ShowSinglePhoto",function (event,data) {
-        //     alert("shit2");
-        //     $scope.userPhotos.selectIndex(data);
-        // });
-
-        // $scope.userPhotos.selectIndex = function (photo) {
-        //     $scope.userPhotos.index = $scope.userPhotos.photos2.indexOf(photo);
-        //     console.log($scope.userPhotos.index);
-        //     $scope.userPhotos.checked = true;
-        //     $scope.userPhotos.reload();
-        // };
-
-        // control: {type: Boolean, default: false},
-        // visibleList: {type: [mongoose.Schema.Types.ObjectId], default: []}
-
         $scope.userPhotos.reload();
 
         $scope.userPhotos.addComment = function(photo) {

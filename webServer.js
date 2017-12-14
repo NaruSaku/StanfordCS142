@@ -65,86 +65,31 @@ app.use(express.static(__dirname));
 
 session.user_id = "";
 
-app.get('/', function (request, response) {
-    response.send('Simple web server of files from ' + __dirname);
+app.use(function(request, response, next){
+    if(!request.session.user_id){
+        if (request.originalUrl === '/admin/login' || request.originalUrl === '/user'){
+            next();
+        } else if(request.originalUrl === '/admin/logout'){
+            response.status(400).send("No user logged-in");
+            return;
+        } else {
+            response.status(401).send("Unauthorized, require log-in");
+            return;
+        }
+    } else {
+        next();
+    }
+    
 });
 
-/*
- * Use express to handle argument passing in the URL.  This .get will cause express
- * To accept URLs with /test/<something> and return the something in request.params.p1
- * If implement the get as follows:
- * /test or /test/info - Return the SchemaInfo object of the database in JSON format. This
- *                       is good for testing connectivity with  MongoDB.
- * /test/counts - Return an object with the counts of the different collections in JSON format
- */
-app.get('/test/:p1', function (request, response) {
-    // Express parses the ":p1" from the URL and returns it in the request.params objects.
-    console.log('/test called with param1 = ', request.params.p1);
-
-    var param = request.params.p1 || 'info';
-
-    if (param === 'info') {
-        // Fetch the SchemaInfo. There should only one of them. The query of {} will match it.
-        SchemaInfo.find({}, function (err, info) {
-            if (err) {
-                // Query returned an error.  We pass it back to the browser with an Internal Service
-                // Error (500) error code.
-                console.error('Doing /user/info error:', err);
-                response.status(500).send(JSON.stringify(err));
-                return;
-            }
-            if (info.length === 0) {
-                // Query didn't return an error but didn't find the SchemaInfo object - This
-                // is also an internal error return.
-                response.status(500).send('Missing SchemaInfo');
-                return;
-            }
-
-            // We got the object - return it in JSON format.
-            console.log('SchemaInfo', info[0]);
-            response.end(JSON.stringify(info[0]));
-        });
-    } else if (param === 'counts') {
-        // In order to return the counts of all the collections we need to do an async
-        // call to each collections. That is tricky to do so we use the async package
-        // do the work.  We put the collections into array and use async.each to
-        // do each .count() query.
-        var collections = [
-            {name: 'user', collection: User},
-            {name: 'photo', collection: Photo},
-            {name: 'schemaInfo', collection: SchemaInfo}
-        ];
-        async.each(collections, function (col, done_callback) {
-            col.collection.count({}, function (err, count) {
-                col.count = count;
-                done_callback(err);
-            });
-        }, function (err) {
-            if (err) {
-                response.status(500).send(JSON.stringify(err));
-            } else {
-                var obj = {};
-                for (var i = 0; i < collections.length; i++) {
-                    obj[collections[i].name] = collections[i].count;
-                }
-                response.send(JSON.stringify(obj));
-
-            }
-        });
-    } else {
-        // If we know understand the parameter we return a (Bad Parameter) (400) status.
-        response.status(400).send('Bad param ' + param);
-    }
+app.get('/', function (request, response) {
+    response.send('Simple web server of files from ' + __dirname);
 });
 
 /*
  * URL /user/list - Return all the User object.
  */
 app.get('/user/list', function (request, response) {
-    if (!request.session.user_id) {
-        response.status(401).send("You don't have the authority.");
-        return;
-    }
     User.find({},['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list'],function (err,userList) {
         if (err){
             response.status(400).send(JSON.stringify(err));
@@ -168,15 +113,6 @@ app.get('/user/list', function (request, response) {
                 photoNum.push(photos.length);
                 callback();
             });
-            // Comment.find({user_id:user._id},function (err,comments) {
-            //     if (err){
-            //         console.log("User" + user + "has no photos.");
-            //     }
-            //     user.commentLength = comments.length;
-            //     alert(comments.length);
-            //     photoNum.push(comments.length);
-            //     callback();
-            // });
         },function (err) {
             response.status(200).send(userList2);
         });
@@ -187,13 +123,9 @@ app.get('/user/list', function (request, response) {
  * URL /user/:id - Return the information for User (id)
  */
 app.get('/user/:id', function (request, response) {
-    if (!request.session.user_id) {
-        response.status(401).send('Get the user unauthorized');
-        return;
-    }
     var id = request.params.id;
     User.findOne({'_id':id},
-        ['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list'],
+        ['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list','profile'],
         function (err,userDetail) {
         if (err){
             response.status(400).send(JSON.stringify(err));
@@ -208,10 +140,6 @@ app.get('/user/:id', function (request, response) {
 });
 /*This part is used to get the photo recently updated and with most comments*/
 app.get('/userPhoto/:id', function (request, response) {
-    if (!request.session.user_id) {
-        response.status(401).send('unauthorized');
-        return;
-    }
     var id = request.params.id;
     var send_body = {};
     Photo.find({'user_id': id}, function(err, photoList) {
@@ -249,10 +177,6 @@ app.get('/userPhoto/:id', function (request, response) {
 });
 
 app.get('/comment/:text', function (request, response) {
-    if (!request.session.user_id) {
-        response.status(401).send('unauthorized');
-        return;
-    }
     var text = request.params.text;
     console.log("User input: " + text);
     var send_comments=[];
@@ -379,14 +303,7 @@ app.get('/comment/:text', function (request, response) {
  * URL /photosOfUser/:id - Return the Photos for User (id)
  */
 app.get('/photosOfUser/:id', function (request, response) {
-    if (!request.session.user_id) {
-        response.status(401).send('unauthorized');
-        return;
-    }
     var user_id = request.params.id;
-    /*This part is to test the photo link*/
-    request.session.photo_user_id = user_id;
-    // request.session.photo_user_id.destroy(function(err) {} );
     Photo.find({'user_id': user_id}, function(err, photoList) {
         if (err) {
             response.status(400).send(JSON.stringify(err));
@@ -412,7 +329,6 @@ app.get('/photosOfUser/:id', function (request, response) {
                         console.log(JSON.stringify(err));
                     }  else {
                         if (commentator === null) {
-                            //console.log('Commentator with _id:' + comments.user_id + ' not found.');
                             var index = comments.indexOf(comment);
                             comments.splice(index,1);
                         } else {
@@ -440,7 +356,6 @@ app.get('/photosOfUser/:id', function (request, response) {
 });
 
 app.post('/admin/login', function(request, response) {
-    // test
     if (!request.body.login_name){
         return;
     }
@@ -462,8 +377,6 @@ app.post('/admin/login', function(request, response) {
         if (user !== null) {
             if(cs142password.doesPasswordMatch(user.password_digest, user.salt, request.body.password)){
                 request.session.user_id = user._id;
-                request.session.user_detail_id = user._id;
-                //session.user_id = user._id;
                 response.status(200).send({
                     _id:user._id,
                     first_name:user.first_name,
@@ -518,10 +431,6 @@ app.post('/user', function(request, response) {
                 return;
             }
             request.session.user_id = createdUser._id;
-            //session.user_id = createdUser._id;
-
-            console.log(createdUser._id);
-
             response.status(200).send(createdUser);
             /* This is used to list all the information of the users */
             // User.find({}, function(err,users) {
@@ -587,11 +496,6 @@ app.post('/photos/new', function(request, response) {
 });
 
 app.post('/commentsOfPhoto/:photo_id', function(request, response) {
-    if (!request.session.user_id) {
-        response.status(401).send('unauthorized');
-        return;
-    }
-
     var user_id = request.session.user_id;  // who posted this comment
     var photo_id = request.params.photo_id;
     var comment = request.body.comment;
@@ -949,18 +853,13 @@ app.post('/dislikePhoto', function(request, response) {
 
 
 app.post('/recentActivity/', function(request, response){
-    if (!request.session.user_id) {
-        response.status(401).send("You don't have the authority.");
-        return;
-    }
     var user_id = request.body.user_id;
     var activity = request.body.activity;
     var photo_name = request.body.photo_name;
     // if control is true, visible_to_all is false;
     var visible_to_all = (request.body.control !== true);
-    //console.log("visible_to_all:" + visible_to_all);
     var visible_list = request.body.visibleList;
-    //console.log("visible_List:" + visible_list);
+
 
     User.findOne({_id: user_id}, function(err, user) {
         if(err || !user) {
@@ -1009,7 +908,6 @@ app.post('/recentActivity/', function(request, response){
                 }
                 list.push(new_activity);
                 activity.save();
-                //console.log(activity.list);
                 response.status(200).send();
 
             });
@@ -1018,34 +916,24 @@ app.post('/recentActivity/', function(request, response){
 });
 
 app.post('/activity',function (request,response) {
-    if (!request.session.user_id) {
-        response.status(401).send("You don't have the authority.");
-        return;
-    }
     Activity.findOne({id:1},function (err,activity_list) {
         if(err || !activity_list) {
             response.status(400).send(JSON.stringify(err));
             return;
         }
         activity_list.list = activity_list.list.filter(function (activity) {
-            //console.log("activity.visible_list" + activity.visible_list);
             return (activity.visible_to_all || activity.visible_list.indexOf(request.session.user_id) >= 0);
         });
         var length = activity_list.list.length;
         if (length > 20){
             activity_list.list = activity_list.list.slice(length - 20,length);
         }
-        //console.log(activity_list.list + "!");
         activity_list.list.reverse();
         response.status(200).send(activity_list.list);
     });
 });
 
 app.post('/getFavorite',function (request,response) {
-    if (!request.session.user_id) {
-        response.status(401).send("You don't have the authority.");
-        return;
-    }
     User.findOne({_id:request.session.user_id},function (err,user) {
         if(err || !user) {
             response.status(400).send(JSON.stringify(err));
@@ -1055,22 +943,16 @@ app.post('/getFavorite',function (request,response) {
         var result = [];
         async.each(user.favorite_photos,function (photo_id,done_callback) {
             Photo.findOne({_id:photo_id},function (err,photo) {
-                console.log(photo);
                 result.push(photo);
                 done_callback();
             });
         },function (err) {
-            console.log(result);
             response.status(200).send(result);
         });
     });
 });
 
 app.post('/favorite',function (request,response) {
-    if (!request.session.user_id) {
-        response.status(401).send("You don't have the authority.");
-        return;
-    }
     User.findOne({_id:request.session.user_id},function (err,user) {
         if(err || !user) {
             response.status(400).send(JSON.stringify(err));
@@ -1105,10 +987,6 @@ app.post('/mentions', function (request, response) {
 });
 
 app.post('/getMention', function (request, response) {
-    if (!request.session.user_id) {
-        response.status(401).send('Get the user unauthorized');
-        return;
-    }
     var user_id = request.body.user_id;
     var all = request.body.all;
     Mention.find({user_id: user_id},function(err, mentions){
@@ -1131,10 +1009,6 @@ app.post('/getMention', function (request, response) {
 });
 
 app.post('/changeMentionState', function (request, response) {
-    if (!request.session.user_id) {
-        response.status(401).send('Get the user unauthorized');
-        return;
-    }
     var mention = request.body.mention;
     Mention.findOne({_id: mention._id},function(err, mention_read){
         console.log(mention_read.read);
@@ -1181,6 +1055,63 @@ app.post('/photos/forward', function(request, response) {
         }
         user.recent_uploaded_photo = "images/" + photo.file_name;
         user.save();
+    });
+});
+
+app.get('/profile/:id', function (request, response) {
+    var profile_id = request.params.id;
+    Photo.findOne({'_id': profile_id}, function(err, photo) {
+        if (err) {
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        if (!photo) {
+            response.status(400).send('Not found');
+            return;
+        }
+        response.status(200).send(photo);
+    });
+});
+
+var processFormBody2 = multer({storage: multer.memoryStorage()}).single('uploadedProfile');
+app.post('/user/profile', function(request, response) {
+    processFormBody2(request, response, function (err) {
+        var owner_id = request.body.user;
+        if (err || !request.file) {
+            response.status(400).send("no file");
+            return;
+        }
+
+        if(request.file.fieldname !== "uploadedProfile") {
+            response.status(400).send("no file");
+            return;
+        }
+
+        var timestamp = new Date().valueOf();
+        var filename = 'U' +  String(timestamp) + request.file.originalname;
+
+        fs.writeFile("./images/" + filename, request.file.buffer, function (err) {
+            if (err) {
+                console.log(err);
+                response.status(400).send("Error uploading photo");
+            }
+            var newPhoto = {
+                file_name: filename,
+                date_time:new Date().toLocaleString()
+            };
+            Photo.create(newPhoto, function(err, createdPhoto) {
+                if (err) {
+                    console.log(err);
+                    response.status(400).send("Error uploading photo");
+                }
+                User.findOne({_id:owner_id},function(err,user){
+                    console.log("user.profile: " + createdPhoto._id);
+                    user.profile = createdPhoto._id;
+                    user.save();
+                });
+                response.status(200).send();
+            });
+        });
     });
 });
 

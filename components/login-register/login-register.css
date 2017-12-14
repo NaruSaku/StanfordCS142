@@ -1,9 +1,12 @@
-.cs142-login-login{
+#cs142-login-login{
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     overflow: scroll;
+    height: 100%;
+    background:url("/images/jokul.jpeg");
+    background-size: 100%;
 }
 
 .cs142-login-loginAndRegister{
@@ -12,10 +15,12 @@
     justify-content: center;
     width: 500px;
     opacity: 0.7;
-    background-color:beige;
+    background-color:black;
     border-radius:10px;
+}
 
-    /*background-image: url("/images/main_bg.png");*/
+.cs142-login-loginAndRegister h2{
+    color:wheat;
 }
 .cs142-login-container{
     display: flex;

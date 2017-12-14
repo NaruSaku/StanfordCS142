@@ -41,18 +41,24 @@
     <script src="components/favorite/favoritePhotoController.js"></script>
     <link rel="stylesheet" type="text/css" href="components/favorite/favorite.css"/>
 
+    <script src="components/user-detail/profileController.js"></script>
+    <script src="node_modules/ng-file-upload/dist/ng-file-upload.js"></script>
+
+
 
 
     <script src="components/visibility-control/visibility-controlController.js"></script>
 
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script src="./my-pagination.js"></script>
+    <link rel="stylesheet" type="text/css" href="my-pagination.css"/>
     <script src="./mentio.js"></script>
 </head>
 
 <body layout="column">
 
-    <md-toolbar layout="row">
+    <md-toolbar layout="row" ng-if="main.loggedInUser !== undefined">
         <div class="cs142-main-toolbar">
             <div class="cs-142-main-leftSide">
                 <md-button hide-gt-sm ng-click="main.showUserList()">
@@ -60,8 +66,8 @@
                 </md-button>
                 <!--The left side of the md-toolbar should have your name.-->
                 <div class="cs142-main-author_version">
-                    <div class="cs142-main-author" >{{main.authorName}}</div>
-                    <div class="cs142-main-version">Version: {{main.version}}</div>
+                    <div class="cs142-main-author" >Welcome, {{main.loggedInUser.first_name}}!</div>
+                    <!-- <div class="cs142-main-version">Version: {{main.version}}</div> -->
                 </div>
             </div>
             <!--This part shows the logged in user-->
@@ -116,7 +122,7 @@
         </md-sidenav>
 
         <md-content flex id="content">
-            <div ng-view class="cs142-main-background"></div>
+            <div ng-view style="height:100%"></div>
         </md-content>
 
     </div>

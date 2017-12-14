@@ -29,7 +29,7 @@ cs142App.controller('favoriteController', ['$scope','$resource','$http','$mdDial
             $scope.favorite.show = "cs142-favorite-show";
         };
         $scope.favorite.hideDelete = function () {
-            $scope.favorite.show = "cs142-favorite-show";
+            $scope.favorite.show = "cs142-favorite-hide";
         };
 
         $scope.favorite.show = "cs142-favorite-hide";

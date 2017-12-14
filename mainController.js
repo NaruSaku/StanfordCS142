@@ -1,6 +1,6 @@
 'use strict';
 
-var cs142App = angular.module('cs142App', ['ngRoute', 'ngMaterial', 'ngResource','ngCookies','mentio']); /*'ngCookies'*/
+var cs142App = angular.module('cs142App', ['ngRoute', 'ngMaterial', 'ngResource','ngCookies','mentio','mePagination','ngFileUpload']); /*'ngCookies'*/
 
 cs142App.config(['$routeProvider',
     function ($routeProvider) {
@@ -149,7 +149,7 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                 headers: {'Content-Type': undefined}
             }).then(function successCallback(response){
                 var photo = response.data;
-                console.log(photo.control + " is true?");
+                console.log(photo._id);
                 $http.post('/recentActivity/',JSON.stringify({
                     activity: "posted a photo",
                     user_id: $scope.main.loggedInUser._id,
@@ -186,13 +186,6 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
         $scope.main.showActivities = function () {
             $location.path("/activity");
         };
-
-
-
-        var versionResource = $resource('/test/info');
-        versionResource.get({}, function(version) {
-            $scope.main.version = version.__v;
-        });
 
         $scope.main.logout = function() {
             $http.post('/recentActivity/',JSON.stringify({
