@@ -90,7 +90,7 @@ app.get('/', function (request, response) {
  * URL /user/list - Return all the User object.
  */
 app.get('/user/list', function (request, response) {
-    User.find({},['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list'],function (err,userList) {
+    User.find({},['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list','profile'],function (err,userList) {
         if (err){
             response.status(400).send(JSON.stringify(err));
             return ;
@@ -1106,7 +1106,7 @@ app.post('/user/profile', function(request, response) {
                 }
                 User.findOne({_id:owner_id},function(err,user){
                     console.log("user.profile: " + createdPhoto._id);
-                    user.profile = createdPhoto._id;
+                    user.profile = createdPhoto.file_name;
                     user.save();
                 });
                 response.status(200).send();

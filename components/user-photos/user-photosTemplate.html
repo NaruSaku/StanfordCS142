@@ -79,14 +79,16 @@
 
         </div>
     </div>
-    <div ng-if="myPage.totalItems" my-pagination pg="myPage"></div>
-    <!--<a id="bottom"></a> You're at the bottom!-->
+    <div class="cs142-photos-pagination">
+        <tm-pagination conf="paginationConf"></tm-pagination>
+    </div>
+    
 </div>
 
 <script type="text/ng-template" id="/people-mentions.tpl">
     <ul class="user-search list-group">
         <li mentio-menu-item="person" ng-repeat="person in items" class="list-group-item">
-	        <img ng-src="{{person.imageUrl}}" class="user-photo">
+	        <img ng-src="/images/{{person.profile}}" class="user-photo">
             <span class="text-primary" ng-bind-html="person.first_name + ' ' + person.last_name | mentioHighlight:typedTerm:'menu-highlighted' | unsafe">
             </span>
             <em class="text-primary" ng-bind-html="person.location | mentioHighlight:typedTerm:'menu-highlighted' | unsafe">

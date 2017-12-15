@@ -138,7 +138,7 @@ img.cs142-photos-image {
     border-color: blue;
     list-style-type:none;
     padding-left: 20px;
-    width: 250px;
+    width: 300px;
 }
 
 .user-search .list-group-item.active {
@@ -151,10 +151,13 @@ img.cs142-photos-image {
     max-width: 30px;
     max-height: 30px;
     border-radius: 15px;
+    margin-right: 10px;
 }
 
 .user-search .list-group-item {
     padding: 5px;
+    display: flex;
+    align-items:center;
 }
 
 .user-search:hover {
@@ -170,7 +173,13 @@ mentio-menu{
     display: block;
 }
 
-ul li:before {
+.cs142-photos-pagination{
+    display: flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/*ul li:before {
   position: relative;
   top:2px;
   content: '';
@@ -180,7 +189,7 @@ ul li:before {
   background-size: 15px;
   background-image: url("/images/heart.png");
   background-repeat: no-repeat;
-}
+}*/
 
 
 

@@ -35,7 +35,7 @@ var userSchema = new mongoose.Schema({
     login_name: String,
     password_digest: String,
     salt: String,
-    profile:{type:mongoose.Schema.Types.ObjectId,default:'5a31ca6582fe983ecda367c0'}, // the id of the photo
+    profile:{type:String,default:'5a31ca6582fe983ecda367c0'}, // the id of the photo
     recentActivity: {type:activity,default:new_activity},
     recently_upload_photo: {type:Boolean,default:false},
     recent_uploaded_photo:String,

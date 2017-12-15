@@ -9,8 +9,9 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         var userId = $routeParams.userId;
         $scope.userPhotos = {};
         $scope.userPhotos.comments = {};
+        $scope.userPhotos.total_photos = [];
         $scope.userPhotos.photos = [];
-        $scope.userPhotos.photos2 = [];
+        //$scope.userPhotos.photos2 = [];
         $scope.userPhotos.index = 0;
         $scope.userPhotos.noPhotos = false;
         $scope.userPhotos.people = [];
@@ -21,8 +22,8 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         var userList = $resource("/user/list");
 
         //
-        var obj = document.getElementById("advanced-feature");
-        $scope.userPhotos.checked = obj.checked;
+        // var obj = document.getElementById("advanced-feature");
+        // $scope.userPhotos.checked = obj.checked;
 
         $scope.userPhotos.reload = function () {
             User.get({'userId': userId}, function(user) {
@@ -59,16 +60,19 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
                             }
                         });
                     });
+                    $scope.userPhotos.total_photos = photos;
+                    $scope.paginationConf.totalItems = photos.length;
+                    //$scope.userPhotos.showPagination();
 
+                    $scope.userPhotos.photos = photos.slice(0,$scope.paginationConf.itemsPerPage);
+                    // $scope.userPhotos.photos2= photos;
 
-                    $scope.userPhotos.photos = photos;
-                    $scope.userPhotos.photos2= photos;
                     if (photos.length === 0){
                         $scope.userPhotos.noPhotos = true;
                     }
-                    if ($scope.userPhotos.checked){
-                        $scope.userPhotos.photos = $scope.userPhotos.photos2.slice($scope.userPhotos.index,$scope.userPhotos.index + 1);
-                    }
+                    // if ($scope.userPhotos.checked){
+                    //     $scope.userPhotos.photos = $scope.userPhotos.photos2.slice($scope.userPhotos.index,$scope.userPhotos.index + 1);
+                    // }
                     $scope.userPhotos.photos.forEach(function (photo) {
                         $http.post('/photoView', JSON.stringify({photo_id:photo._id})).then(function successCallback(response) {
                             $rootScope.$broadcast("photoViewed");
@@ -221,9 +225,15 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         });
 
         $scope.userPhotos.searchPeople = function(term) {
+            if (term === ""){
+                return ;
+            }
             var peopleList = [];
             angular.forEach($scope.userPhotos.userNames, function(person) {
                 if (person.first_name.toUpperCase().indexOf(term.toUpperCase()) >= 0 || person.last_name.toUpperCase().indexOf(term.toUpperCase()) >= 0) {
+                    if (person.profile === '5a31ca6582fe983ecda367c0'){
+                        person.profile = 'default-profile.jpeg';
+                    }
                     peopleList.push(person);
                 }
             });
@@ -273,6 +283,40 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
             $scope.main.controlVisibility(photo);
         };
 
+
+        $scope.paginationConf = {
+            currentPage: 1,
+            totalItems: 100,//$scope.userPhotos.total_length,
+            itemsPerPage: 3,
+            pagesLength: 3,
+            perPageOptions: [1,5,10, 20, 30, 40, 50],
+            onChange:function(){
+                var currentPage = $scope.paginationConf.currentPage;
+                console.log(currentPage);
+                var itemsPerPage = $scope.paginationConf.itemsPerPage;
+                $scope.userPhotos.photos = $scope.userPhotos.total_photos.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            }
+        };
+        // $scope.userPhotos.showPagination = function(){
+        //     $scope.paginationConf = {
+        //         currentPage: 1,
+        //         totalItems: $scope.userPhotos.total_length,
+        //         itemsPerPage: 3,
+        //         pagesLength: 3,
+        //         perPageOptions: [10, 20, 30, 40, 50],
+        //         onChange:function(){
+        //             var currentPage = $scope.paginationConf.currentPage;
+        //             var itemsPerPage = $scope.paginationConf.itemsPerPage;
+        //             $scope.userPhotos.photos = $scope.userPhotos.photos.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+        //         }
+        //     };
+        // };
+        //$scope.userPhotos.showPagination();
+
+        
+
+        
+
         /** doesn't work here*/
         // $scope.$on("bottom",$scope.gotoBottom);
         // $scope.gotoBottom = function() {
@@ -307,6 +351,17 @@ cs142App.controller('UserPhotosController', ['$scope', '$routeParams','$resource
         $scope.$on('photoLiked', $scope.userPhotos.reload);
         $scope.$on('photoDisLiked', $scope.userPhotos.reload);
     }]);
+// app.factory('BusinessService', ['$http', function ($http) {
+//     var list = function (postData) {
+//         return $http.post('/Employee/GetAllEmployee', postData);
+//     }
+
+//     return {
+//         list: function (postData) {
+//             return list(postData);
+//         }
+//     }
+// }]);
 
 // 2012-08-30 10:44:23
 function string2DateStamp(stringTime) {

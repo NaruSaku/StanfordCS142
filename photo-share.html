@@ -54,6 +54,7 @@
     <script src="./my-pagination.js"></script>
     <link rel="stylesheet" type="text/css" href="my-pagination.css"/>
     <script src="./mentio.js"></script>
+    <link rel="stylesheet" href="lib/bootstrap/3.2.0/css/bootstrap.css">
 </head>
 
 <body layout="column">
@@ -91,9 +92,9 @@
                 </div>
             </div>
 
-            <div ng-show="main.loggedInUser" class="cs142-main-barElement" title="Only show one picture each page">
+            <!-- <div ng-show="main.loggedInUser" class="cs142-main-barElement" title="Only show one picture each page">
                 <input type="checkbox" id="advanced-feature">Advanced Feature
-            </div>
+            </div> -->
 
             <form ng-submit="main.submit()" class="cs142-main-searchComment" ng-show="main.loggedInUser">
                 <span><input ng-model="main.comment" class="cs142-main-comment"></span>
@@ -120,12 +121,9 @@
         <md-sidenav ng-if="main.loggedInUser" md-is-locked-open="$mdMedia('gt-sm')" md-component-id="users"  class="md-whiteframe-z2 cs142-main-sidenav">
             <div ng-include="'components/user-list/user-listTemplate.html'" ng-controller="UserListController"></div>
         </md-sidenav>
-
         <md-content flex id="content">
             <div ng-view style="height:100%"></div>
         </md-content>
-
     </div>
-
 </body>
 </html>

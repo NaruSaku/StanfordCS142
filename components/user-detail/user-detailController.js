@@ -27,10 +27,7 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
                 if (photo_profile === '5a31ca6582fe983ecda367c0'){
                     $scope.userDetail.profile.file_name = "default-profile.jpeg";
                 } else {
-                    var profile = $resource('/profile/:photo_profile');
-                    profile.get({'photo_profile':photo_profile},function(pro){
-                        $scope.userDetail.profile = pro;
-                    });
+                    $scope.userDetail.profile.file_name = userData.profile;
                 }
             });
             userPhotoData.get({'userId':userId},function (userPhotoDetail) {
@@ -42,6 +39,9 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
         $scope.userDetail.load();
 
         $scope.userDetail.changeProfile = function(){
+            if (userId !== $scope.main.loggedInUser._id){
+                return ;
+            }
             $mdDialog.show({
                 controller: 'profileController',
                 templateUrl: 'components/user-detail/profileTemplate.html',
