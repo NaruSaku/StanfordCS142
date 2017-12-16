@@ -5,20 +5,26 @@
     <div  ng-repeat="photo in userPhotos.photos" id={{photo._id}} class="cs142-photos-photo">
         <div class="cs142-photos-photoDate">
             <div>{{photo.date_time}}</div>
-            <!--<button ng-if="userPhotos.hasPhotoAuthority(photo)" ng-click="userPhotos.delete(photo)">Delete</button>-->
-            <md-button class="md-primary md-raised" ng-if="userPhotos.hasPhotoAuthority(photo)" ng-click="userPhotos.delete($event,photo)">
-                Delete
-            </md-button>
-            <md-button class="md-primary md-raised" ng-if="!userPhotos.hasPhotoAuthority(photo)" ng-href="/images/{{photo.file_name}}">
-                Download
-            </md-button>
+
+            <div>
+                <select ng-init="selectedPercentage = userPhotos.percentage[0]" ng-model="selectedPercentage" ng-options="x for x in userPhotos.percentage" 
+                ng-change="userPhotos.selectChange(selectedPercentage)"> 
+                </select>
+                <md-button class="md-primary md-raised" ng-if="userPhotos.hasPhotoAuthority(photo)" ng-click="userPhotos.delete($event,photo)">
+                    Delete
+                </md-button>
+                <md-button class="md-primary md-raised" ng-if="!userPhotos.hasPhotoAuthority(photo)" ng-href="/images/{{photo.file_name}}">
+                    Download
+                </md-button>
+            </div>
+            
         </div>
 
-        <img ng-src="/images/{{photo.file_name}}" class="cs142-photos-image">
-        <div ng-show="userPhotos.checked" class="cs142-photos-buttons">
+        <img ng-src="/images/{{photo.file_name}}" id="cs142-photos-image">
+        <!-- <div ng-show="userPhotos.checked" class="cs142-photos-buttons">
             <button ng-click="userPhotos.previous()">Previous</button>
             <button ng-click="userPhotos.next()">Next</button>
-        </div>
+        </div> -->
         <div class="cs142-photos-photoLike">
             <div class="cs142-photos-like">
                 <img ng-src="/images/like.png" ng-click = "userPhotos.like(photo)">

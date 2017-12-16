@@ -35,13 +35,15 @@ var userSchema = new mongoose.Schema({
     login_name: String,
     password_digest: String,
     salt: String,
-    profile:{type:String,default:'5a31ca6582fe983ecda367c0'}, // the id of the photo
+    profile:{type:[String],default:['default-profile.jpeg']}, // the id of the photo
     recentActivity: {type:activity,default:new_activity},
     recently_upload_photo: {type:Boolean,default:false},
     recent_uploaded_photo:String,
     photo_liked_list:{type:[String],default:[]},
     photo_disliked_list:{type:[String],default:[]},
-    favorite_photos:{type:[String],default:[]}
+    favorite_photos:{type:[String],default:[]},
+    friend_list:{type: [mongoose.Schema.Types.ObjectId], default: []},
+    friend_request_list:{type: [mongoose.Schema.Types.ObjectId], default: []}
 });
 
 // the schema is useless so far

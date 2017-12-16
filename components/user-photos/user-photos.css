@@ -112,7 +112,7 @@
     font-weight: 800;
 }
 
-img.cs142-photos-image {
+img#cs142-photos-image {
     box-sizing: border-box;
     border-radius: 5px;
     width: 100%;

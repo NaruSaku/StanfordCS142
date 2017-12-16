@@ -52,7 +52,7 @@ var bodyParser = require('body-parser');
 var fs = require("fs");
 var multer = require('multer');
 var cs142password = require('./cs142password.js');
-// var nodemailer = require('nodemailer');
+var nodemailer = require('nodemailer');
 // var smtpTransport = require('nodemailer-smtp-transport');
 
 
@@ -90,7 +90,7 @@ app.get('/', function (request, response) {
  * URL /user/list - Return all the User object.
  */
 app.get('/user/list', function (request, response) {
-    User.find({},['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list','profile'],function (err,userList) {
+    User.find({},['_id','first_name','last_name','location','description','occupation','recentActivity','recently_upload_photo','recent_uploaded_photo','profile'],function (err,userList) {
         if (err){
             response.status(400).send(JSON.stringify(err));
             return ;
@@ -117,6 +117,44 @@ app.get('/user/list', function (request, response) {
             response.status(200).send(userList2);
         });
     });
+    // Generate test SMTP service account from ethereal.email
+    // Only needed if you don't have a real mail account for testing
+    // nodemailer.createTestAccount((err, account) => {
+
+    //     // create reusable transporter object using the default SMTP transport
+    //     var transporter = nodemailer.createTransport({
+    //         host: "smtp.126.com",        // 主机  
+    //         secureConnection : true,    // 使用 SSL  
+    //         port: 465,                  // SMTP 端口  
+    //         auth: {
+    //             user: 'yuji199509@126.com', //刚才注册的邮箱账号
+    //             pass: 'Keaichenhun486+'  //邮箱的授权码，不是注册时的密码
+    //         }
+    //     });
+
+    //     // setup email data with unicode symbols
+    //     let mailOptions = {
+    //         from: '"Fred Foo 👻" <yuji199509@126.com>', // sender address
+    //         to: 'yuji199509@gmail.com, 784502133@qq.com', // list of receivers
+    //         subject: 'Hello ✔', // Subject line
+    //         text: 'Hello world?', // plain text body
+    //         html: '<b>Hello world?</b>' // html body
+    //     };
+
+    //     // send mail with defined transport object
+    //     transporter.sendMail(mailOptions, (error, info) => {
+    //         if (error) {
+    //             return console.log(error);
+    //         }
+    //         console.log('Message sent: %s', info.messageId);
+    //         // Preview only available when sending through an Ethereal account
+    //         console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+
+    //         // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@blurdybloop.com>
+    //         // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+    //     });
+    // });
+
 });
 
 /*
@@ -125,7 +163,7 @@ app.get('/user/list', function (request, response) {
 app.get('/user/:id', function (request, response) {
     var id = request.params.id;
     User.findOne({'_id':id},
-        ['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list','profile'],
+        ['_id','first_name','last_name','location','description','occupation','favorite_photos','recentActivity','recently_upload_photo','recent_uploaded_photo','photo_liked_list','photo_disliked_list','profile','friend_request_list','friend_list'],
         function (err,userDetail) {
         if (err){
             response.status(400).send(JSON.stringify(err));
@@ -367,7 +405,9 @@ app.post('/admin/login', function(request, response) {
             response.status(200).send({
                 _id:user._id,
                 first_name:user.first_name,
-                last_name:user.last_name
+                last_name:user.last_name,
+                friend_request_list:user.friend_request_list,
+                friend_list:user.friend_list
             });
         });
         return;
@@ -380,7 +420,9 @@ app.post('/admin/login', function(request, response) {
                 response.status(200).send({
                     _id:user._id,
                     first_name:user.first_name,
-                    last_name:user.last_name
+                    last_name:user.last_name,
+                    friend_request_list:user.friend_request_list,
+                    friend_list:user.friend_list
                 });
             } else {
                 response.status(400).send("Password is not correct!");
@@ -605,9 +647,8 @@ app.post('/deletePhoto', function(request, response) {
                 callback();
             });
         });
-        Photo.remove({_id: photo_id}, function(err) {
-            // this part is necessary!
-        });
+        fs.unlinkSync("images/" + photo.file_name);
+        Photo.remove({_id: photo_id}, function(err) {});
         response.status(200).end();
     });
     Comment.remove({photo_id:photo_id}, function(err, comments){
@@ -1106,7 +1147,7 @@ app.post('/user/profile', function(request, response) {
                 }
                 User.findOne({_id:owner_id},function(err,user){
                     console.log("user.profile: " + createdPhoto._id);
-                    user.profile = createdPhoto.file_name;
+                    user.profile.push(createdPhoto.file_name);
                     user.save();
                 });
                 response.status(200).send();
@@ -1114,6 +1155,107 @@ app.post('/user/profile', function(request, response) {
         });
     });
 });
+
+app.post('/searchFriend', function (request, response) {
+    var login_name = request.body.search_name;
+    console.log("search_name: " + login_name);
+    User.find({'login_name':login_name},
+        ['_id','first_name','last_name','location','description','occupation','profile'],
+        function (err,login_name_list) {
+        if (err){
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        response.status(200).send(login_name_list);
+    });
+});
+
+app.post('/addFriend',function(request,response){
+    var friend_id = request.body.friend_id;
+    var request_id = request.body.request_id;
+    User.findOne({_id:friend_id},function(err,user){
+        if (err){
+            response.status(400).send(JSON.stringify(err));
+            return;
+        }
+        if (user.friend_list.indexOf(friend_id) >= 0){   // You are already friends!
+            response.status(200).send("Friends");
+        } else if (user.friend_request_list.indexOf(request_id) < 0){
+            user.friend_request_list.push(request_id);
+            user.save();
+            //console.log("Send Successfully");
+            response.status(200).send(true);
+        } else {
+            //console.log("You have already sent the request!");
+            response.status(200).send(false);
+        }
+    });
+});
+
+
+app.post('/showFriendRequest',function(request,response){
+    var friend_requests = request.body.FriendRequests;
+    //console.log(friend_requests);
+    var list = [];
+    async.each(friend_requests,function (user_id,done_callback) {
+        User.findOne({'_id':user_id},['_id','first_name','last_name','location','description','occupation','profile'],function(err,user){
+            if (err){
+                response.status(400).send(JSON.stringify(err));
+                return;
+            }
+            list.push(user);            
+            done_callback();     
+        });
+    },function (err) {
+        if (err){
+            response.status(400).send("Error");
+        } else {
+            response.status(200).send(list);
+        }        
+    });
+});
+
+
+app.post('/acceptFriend',function(request,response){
+    var accept_list = request.body.accept_list;
+    console.log("accept_list: " + accept_list);
+    async.each(accept_list,function (accept_id,done_callback) {
+        User.findOne({'_id':accept_id},['friend_list'],function(err,user){
+            if (err){
+                response.status(400).send(JSON.stringify(err));
+                return;
+            }
+            user.friend_list.push(request.session.user_id);  // push the current user to the acceptor's friend list
+            user.save();
+            console.log(user.friend_list + "!");
+            done_callback();    
+        });    
+    },function (err) {
+        if (err){
+            response.status(400).send("Error");
+        } else {
+            User.findOne({'_id':request.session.user_id},['friend_request_list','friend_list'],function(err,user2){
+                if (err){
+                    response.status(400).send(JSON.stringify(err));
+                    return;
+                }
+                for (var i = 0; i < accept_list.length; i++){
+                    if (user2.friend_list.indexOf(accept_list[i]) < 0){
+                        user2.friend_list.push(accept_list[i]);            // add friend
+                    }
+                    if (user2.friend_request_list.indexOf(accept_list[i]) >= 0){
+                        user2.friend_request_list.slice(user2.friend_request_list.indexOf(accept_list[i]),1); // remove request
+                    }
+                }
+                console.log(user2.friend_list + "?");
+                user2.save();
+                response.status(200).send();
+            }); 
+        }
+    });
+});
+
+
 
 
 

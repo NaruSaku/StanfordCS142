@@ -98,3 +98,31 @@ input[type="file"] {
     font-size:12px;
     color:#666;
 }
+
+.cs142-main-setting{
+    width:40px; 
+    height:40px; 
+    border:0; 
+    background:url("/images/Setting.png");
+}
+md-menu-content[width="5"]{
+    min-width: 200px;
+}
+md-menu-content.md-menu-bar-menu.md-dense{
+    padding: 0;
+}
+
+.cs142-main-friendList{
+    display: flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.cs142-main-friend_name{
+    font-size: :20px;
+    font-weight: 800;
+}
+.cs142-main-friend_profile{
+    width:34px;
+    border-radius: 50%;
+}
+

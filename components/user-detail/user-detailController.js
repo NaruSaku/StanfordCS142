@@ -18,16 +18,18 @@ cs142App.controller('UserDetailController', ['$scope', '$routeParams','$resource
         $scope.userDetail.load = function(){
             userData.get({'userId':userId},function (userData) {
                 $scope.userDetail.user = userData;
+                console.log(userData.friend_list);
                 $scope.userDetail.fullName = userData.first_name + " " + userData.last_name;
                 $scope.main.appContext = $scope.userDetail.fullName;
                 $scope.main.title = $scope.userDetail.fullName;
                 $scope.userDetail.showMention();
 
-                var photo_profile = $scope.userDetail.user.profile;  // photo_id
-                if (photo_profile === '5a31ca6582fe983ecda367c0'){
+                var profile_length = $scope.userDetail.user.profile.length;
+                var photo_profile = $scope.userDetail.user.profile[profile_length - 1];  // photo_filename
+                if (photo_profile === 'default-profile.jpeg'){
                     $scope.userDetail.profile.file_name = "default-profile.jpeg";
                 } else {
-                    $scope.userDetail.profile.file_name = userData.profile;
+                    $scope.userDetail.profile.file_name = photo_profile;
                 }
             });
             userPhotoData.get({'userId':userId},function (userPhotoDetail) {

@@ -1,6 +1,6 @@
 'use strict';
 
-var cs142App = angular.module('cs142App', ['ngRoute', 'ngMaterial', 'ngResource','ngCookies','mentio','tm.pagination','ngFileUpload']); /*'ngCookies'*/
+var cs142App = angular.module('cs142App', ['ngRoute', 'ngMaterial', 'ngResource','ngCookies','mentio','tm.pagination','ngFileUpload','ui.bootstrap','ngToast']); /*'ngCookies'*/
 
 cs142App.config(['$routeProvider',
     function ($routeProvider) {
@@ -38,8 +38,8 @@ cs142App.config(['$routeProvider',
         });
     }]);
 
-cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$rootScope','$location','$http','$mdDialog',
-    function ($scope, $mdSidenav,$resource,$rootScope,$location,$http,$mdDialog) {
+cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$rootScope','$location','$http','$mdDialog','$modal','ngToast',
+    function ($scope, $mdSidenav,$resource,$rootScope,$location,$http,$mdDialog,$modal,ngToast) {
         $scope.main = {};
         $scope.main.title = 'CS142 Photo Sharing Website';
         $scope.main.authorName = "Ji Yu";
@@ -58,7 +58,6 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
                 //delete sessionStorage.userService;
                 if(sessionStorage.userService){
                     $scope.main.loggedInUser = angular.fromJson(sessionStorage.userService);
-                    //console.log("RestoreState: " + $scope.main.loggedInUser);
                 }
             }
         };
@@ -71,7 +70,6 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
 
         $rootScope.$on("$routeChangeStart", function(event, next, current) {
             if ($scope.main.loggedInUser === undefined) {
-                // no logged user, redirect to /login-register unless already there
                 // This part is used to hold the session
                 service.RestoreState();
                 if($scope.main.loggedInUser){
@@ -212,13 +210,158 @@ cs142App.controller('MainController', ['$scope', '$mdSidenav','$resource','$root
             $scope.main.comment = "";
         };
 
+        $scope.main.searchFriend = function() {
+            var modalInstance = $modal.open({
+                templateUrl : 'modal.html',     //script标签中定义的id
+                controller : 'modalCtrl',       //modal对应的Controller
+                resolve : {
+                    //data : ""
+                }
+            });
+            modalInstance.result.then(function(search_name) {   
+                $http.post('/searchFriend',JSON.stringify({'search_name':search_name}))
+                .then(function successCallback(response) {
+                    $scope.main.login_name_list = response.data;
+                    if ($scope.main.login_name_list.length === 0){
+                        console.log("No such user.");
+                    } else {
+                        console.log($scope.main.login_name_list.length + " user(s) have been found.");
+                        $scope.main.addFriend($scope.main.login_name_list);
+                    }
+                }, function errorCallback(response) {
+                    console.log(response.data);
+                });
+            }, function(reason) {  
+                console.log(reason);// 点击空白区域，总会输出backdrop  
+            });  
+        };
+
+        $scope.main.addFriend = function(list){
+            var modalInstance = $modal.open({
+                templateUrl : 'addFriendmodal.html',     //script标签中定义的id
+                controller : 'AddFriendCtrl',       //modal对应的Controller
+                resolve : {  
+                    list : function() {  
+                        return list;  
+                    }  
+                }  
+            });
+            modalInstance.result.then(function(chosen_friend_id) {  
+                if (chosen_friend_id === $scope.main.loggedInUser._id){    // cannot add friend to yourself
+                    return ;
+                } 
+                $http.post('/addFriend',JSON.stringify({
+                    'friend_id':chosen_friend_id,
+                    'request_id':$scope.main.loggedInUser._id
+                }))
+                .then(function successCallback(response) {
+                    console.log(response.data);
+                    if (response.data === "Friends"){
+                        ngToast.create({
+                          className: 'warning',
+                          content: 'You are already friends.'
+                        });
+                    } else if (response.data){
+                        ngToast.create('Send successfully!');
+                    } else {
+                        ngToast.create({
+                          className: 'warning',
+                          content: 'You have sent this request before.'
+                        });
+                    }
+                }, function errorCallback(response) {
+                    console.log(response.data);
+                });
+            }, function(reason) {  
+                console.log(reason);// 点击空白区域，总会输出backdrop  
+            });  
+        };
+
+        $scope.main.showFriendRequest = function(){
+            console.log($scope.main.loggedInUser);
+            $http.post('/showFriendRequest',JSON.stringify({'FriendRequests':$scope.main.loggedInUser.friend_request_list})).
+            then(function successCallback(response) {
+                $scope.main.friend_request_list = response.data;
+                if ($scope.main.friend_request_list.length === 0){
+                    console.log("No Request.");
+                } else {
+                    console.log($scope.main.friend_request_list.length + " request(s) have been found.");
+                    var modalInstance = $modal.open({
+                        templateUrl : 'friendRequest.html',     //script标签中定义的id
+                        controller : 'friendRequestCtrl',       //modal对应的Controller
+                        resolve : {
+                            list : function() {  
+                                return $scope.main.friend_request_list;  
+                            }  
+                        }
+                    });
+                    modalInstance.result.then(function(accept_list) {   
+                        $http.post('/acceptFriend',JSON.stringify({'accept_list':accept_list}))
+                        .then(function successCallback(response) {
+                            ngToast.create('Accept successfully!');
+                        }, function errorCallback(response) {
+                            console.log(response.data);
+                        });
+                    }, function(reason) {  
+                        console.log(reason);// 点击空白区域，总会输出backdrop  
+                    });  
+                }
+            }, function errorCallback(response) {
+                console.log(response.data);
+            });
+        }
+
 
     }]);
 
-cs142App.run(function($rootScope, $location, $anchorScroll, $routeParams) {
-    $rootScope.$on('$routeChangeSuccess', function(newRoute, oldRoute) {
-        $location.hash($routeParams.scrollTo);
-        $anchorScroll();
-    });
+
+cs142App.controller('modalCtrl', function($scope, $modalInstance) {
+
+    //在这里处理要进行的操作   
+    $scope.ok = function() {
+        $modalInstance.close($scope.selected);  
+    };
+    $scope.cancel = function() {
+        $modalInstance.dismiss('cancel');
+    }
 });
+
+cs142App.controller('AddFriendCtrl', function($scope, $modalInstance,list) {
+    $scope.list = list;
+    $scope.chosen_friend;
+    $scope.choose = function(id){
+        console.log(id);
+        $scope.chosen_friend = id;
+        $scope.ok();
+    }
+    $scope.ok = function() {
+        $modalInstance.close($scope.chosen_friend);  
+    };
+    $scope.cancel = function() {
+        $modalInstance.dismiss('cancel');
+    }
+});
+
+cs142App.controller('friendRequestCtrl', function($scope, $modalInstance,list) {
+    $scope.list = list;
+    $scope.accept_list = [];
+    $scope.accept = function(id){
+        if ($scope.accept_list.indexOf(id) < 0){
+            $scope.accept_list.push(id);
+        }    
+    }
+    $scope.ok = function() {
+        $modalInstance.close($scope.accept_list);  
+    };
+    $scope.cancel = function() {
+        $modalInstance.dismiss('cancel');
+    }
+});
+
+// cs142App.run(function($rootScope, $location, $anchorScroll, $routeParams) {
+//     $rootScope.$on('$routeChangeSuccess', function(newRoute, oldRoute) {
+//         $location.hash($routeParams.scrollTo);
+//         $anchorScroll();
+//     });
+// });
 

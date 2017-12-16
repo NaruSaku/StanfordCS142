@@ -37,8 +37,18 @@ var Activity = require('./schema/activity.js');
 var Mention = require('./schema/mention.js');
 
 var versionString = '1.0';
+var fs = require("fs");
+var async = require("async");
+/*This part can delete all the file*/
+// Photo.find({},function(err,photos){
+//     async.each(photos,function(photo,callback){
+//         fs.unlinkSync("images/" + photo.file_name);
+//         callback();
+//     });
+// })
 
 // We start by removing anything that existing in the collections.
+
 var removePromises = [User.remove({}), Photo.remove({}), SchemaInfo.remove({}),Comment.remove({}),Activity.remove({}),Mention.remove({})];
 
 Promise.all(removePromises).then(function () {

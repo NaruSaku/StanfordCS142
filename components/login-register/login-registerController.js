@@ -49,7 +49,7 @@ cs142App.controller('LoginRegisterController', ['$scope', '$resource', '$http', 
                         $cookies.put($scope.login.loginName,$scope.login.password);
                     }
                     $scope.main.loggedInUser = response.data;
-                    console.log("response.data: " + JSON.stringify($scope.main.loggedInUser));
+                    //console.log("response.data: " + JSON.stringify($scope.main.loggedInUser));
                     $http.post('/recentActivity/',JSON.stringify({
                         activity: "logged in",
                         user_id: $scope.main.loggedInUser._id,
