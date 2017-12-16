@@ -126,3 +126,8 @@ md-menu-content.md-menu-bar-menu.md-dense{
     border-radius: 50%;
 }
 
+.cs142-main-friendRequestButton{
+    display: flex;
+    justify-content:space-between;
+}
+
