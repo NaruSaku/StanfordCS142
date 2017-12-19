@@ -127,15 +127,15 @@ app.get('/user/list', function (request, response) {
     //         secureConnection : true,    // 使用 SSL  
     //         port: 465,                  // SMTP 端口  
     //         auth: {
-    //             user: 'yuji199509@126.com', //刚才注册的邮箱账号
-    //             pass: 'Keaichenhun486+'  //邮箱的授权码，不是注册时的密码
+    //             user: '********@126.com', //刚才注册的邮箱账号
+    //             pass: '************'  //邮箱的授权码，不是注册时的密码
     //         }
     //     });
 
     //     // setup email data with unicode symbols
     //     let mailOptions = {
-    //         from: '"Fred Foo 👻" <yuji199509@126.com>', // sender address
-    //         to: 'yuji199509@gmail.com, 784502133@qq.com', // list of receivers
+    //         from: '"Fred Foo 👻" <********@126.com>', // sender address
+    //         to: '***********@gmail.com, ***********@qq.com', // list of receivers
     //         subject: 'Hello ✔', // Subject line
     //         text: 'Hello world?', // plain text body
     //         html: '<b>Hello world?</b>' // html body
@@ -149,9 +149,6 @@ app.get('/user/list', function (request, response) {
     //         console.log('Message sent: %s', info.messageId);
     //         // Preview only available when sending through an Ethereal account
     //         console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-
-    //         // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@blurdybloop.com>
-    //         // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
     //     });
     // });
 
